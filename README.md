@@ -13,5 +13,3 @@ or
 use crontab regularly perform mysql_watcher.sh
 
 Enjoy it! 
-Please let me know if you have any comments.
-kinghow@hotmail.com
