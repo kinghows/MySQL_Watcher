@@ -282,7 +282,6 @@ def f_print_mysql_status(conn,interval):
     Questions1 = long(mysqlstatus1["Questions"])
     Questions2 = long(mysqlstatus2["Questions"])
     # 服务器已经运行的时间（以秒为单位）
-    Uptime1 = long(mysqlstatus1["Uptime"])
     Uptime2 = long(mysqlstatus2["Uptime"])
     Com_commit1 = long(mysqlstatus1["Com_commit"])
     Com_commit2 = long(mysqlstatus2["Com_commit"])
@@ -386,20 +385,20 @@ def f_print_mysql_status(conn,interval):
     Uptimes1 = str(interval) + "s"
     Uptimes2 = f_sec2dhms(Uptime2)
     # QPS = Questions / Seconds
-    QPS1 = str(round((Questions2-Questions1) * 1.0 / 60, 2))
+    QPS1 = str(round((Questions2-Questions1) * 1.0 / interval, 2))
     QPS2 = str(round(Questions2* 1.0 / Uptime2, 2))
 
-    TPS1 = str(round((Com_commit2 + Com_rollback2-Com_commit1 - Com_rollback1) * 1.0 / 60, 2))
+    TPS1 = str(round((Com_commit2 + Com_rollback2-Com_commit1 - Com_rollback1) * 1.0 / interval, 2))
     TPS2 = str(round((Com_commit2 + Com_rollback2)* 1.0 / Uptime2, 2))
 
     Read1 = Com_select2 + Qcache_hits2-Com_select1 - Qcache_hits1
     Read2 = Com_select2 + Qcache_hits2
-    ReadS1 = str(round(Read1 * 1.0 / 60, 2))
+    ReadS1 = str(round(Read1 * 1.0 / interval, 2))
     ReadS2 = str(round(Read2* 1.0 / Uptime2, 2))
 
     Write1 = Com_insert2 + Com_update2 + Com_delete2 + Com_replace2-Com_insert1 - Com_update1 - Com_delete1 - Com_replace1
     Write2 = Com_insert2 + Com_update2 + Com_delete2 + Com_replace2
-    WriteS1 = str(round(Write1 * 1.0 / 60, 2))
+    WriteS1 = str(round(Write1 * 1.0 / interval, 2))
     WriteS2 = str(round(Write2* 1.0 / Uptime2, 2))
     # Read/Write Ratio
     if Write1<>0:
@@ -412,7 +411,7 @@ def f_print_mysql_status(conn,interval):
     else:
         rwr2 ='0.0%'
 
-    Slow_queries_per_second1 = str(round((Slow_queries2-Slow_queries1) * 1.0 / 60, 2))
+    Slow_queries_per_second1 = str(round((Slow_queries2-Slow_queries1) * 1.0 / interval, 2))
     Slow_queries_per_second2 = str(round(Slow_queries2 * 1.0 / Uptime2, 2))
     #Slow_queries / Questions
     SQ1 = str(round(((Slow_queries2-Slow_queries1) * 1.0 / (Questions2-Questions1)) * 100, 2)) + "%"
@@ -458,7 +457,7 @@ def f_print_mysql_status(conn,interval):
         Query_cache_hits2 = '0.0%'
 
     if (Select_full_join2-Select_full_join1) > 0:
-        Select_full_join_per_second1 = str(round((Select_full_join2-Select_full_join1) * 1.0 / 60, 2))
+        Select_full_join_per_second1 = str(round((Select_full_join2-Select_full_join1) * 1.0 / interval, 2))
     else:
         Select_full_join_per_second1 = '0.0%'
     Select_full_join_per_second2 = str(round(Select_full_join2 * 1.0 / Uptime2, 2))
