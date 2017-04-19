@@ -363,6 +363,19 @@ def f_print_mysql_status(conn,interval):
     # 没有主键（key）联合（Join）的执行。该值可能是零。这是捕获开发错误的好方法，因为一些这样的查询可能降低系统的性能。
     Select_full_join1 = long(mysqlstatus1["Select_full_join"])
     Select_full_join2 = long(mysqlstatus2["Select_full_join"])
+    #  Percentage of full table scans
+    Handler_read_rnd_next1 = long(mysqlstatus1["Handler_read_rnd_next"])
+    Handler_read_rnd_next2 = long(mysqlstatus2["Handler_read_rnd_next"])
+    Handler_read_rnd1 = long(mysqlstatus1["Handler_read_rnd"])
+    Handler_read_rnd2 = long(mysqlstatus2["Handler_read_rnd"])
+    Handler_read_first1 = long(mysqlstatus1["Handler_read_first"])
+    Handler_read_first2 = long(mysqlstatus2["Handler_read_first"])
+    Handler_read_next1 = long(mysqlstatus1["Handler_read_next"])
+    Handler_read_next2 = long(mysqlstatus2["Handler_read_next"])
+    Handler_read_key1 = long(mysqlstatus1["Handler_read_key"])
+    Handler_read_key2 = long(mysqlstatus2["Handler_read_key"])
+    Handler_read_prev1 = long(mysqlstatus1["Handler_read_prev"])
+    Handler_read_prev2 = long(mysqlstatus2["Handler_read_prev"])
     # 缓冲池利用率
     Innodb_buffer_pool_pages_total1 = long(mysqlstatus1["Innodb_buffer_pool_pages_total"])
     Innodb_buffer_pool_pages_total2 = long(mysqlstatus2["Innodb_buffer_pool_pages_total"])
@@ -456,6 +469,13 @@ def f_print_mysql_status(conn,interval):
         Select_full_join_per_second1 = '0.0%'
     full_select_in_all_select2 = str(round((Select_full_join2 * 1.0 / Com_select2) * 100, 2)) + "%"
 
+    #((Handler_read_rnd_next + Handler_read_rnd) / (Handler_read_rnd_next + Handler_read_rnd + Handler_read_first + Handler_read_next + Handler_read_key + Handler_read_prev)).
+    if (Handler_read_rnd_next2 -Handler_read_rnd_next1+ Handler_read_rnd2-Handler_read_rnd1 + Handler_read_first2 -Handler_read_first1+ Handler_read_next2-Handler_read_next1 + Handler_read_key2-Handler_read_key2 + Handler_read_prev2-Handler_read_prev1) > 0:
+        full_table_scans1=str(round((Handler_read_rnd_next2 + Handler_read_rnd2-Handler_read_rnd_next1 - Handler_read_rnd1)* 1.0 / (Handler_read_rnd_next2 -Handler_read_rnd_next1+ Handler_read_rnd2-Handler_read_rnd1 + Handler_read_first2 -Handler_read_first1+ Handler_read_next2-Handler_read_next1 + Handler_read_key2-Handler_read_key2 + Handler_read_prev2-Handler_read_prev1)* 100, 2)) + "%"
+    else:
+        full_table_scans1 = '0.0%'
+    full_table_scans2=str(round((Handler_read_rnd_next2 + Handler_read_rnd2)* 1.0 / (Handler_read_rnd_next2 + Handler_read_rnd2 + Handler_read_first2 + Handler_read_next2 + Handler_read_key2 + Handler_read_prev2)* 100, 2)) + "%"
+
     if (Table_locks_immediate2-Table_locks_immediate1) > 0:
         lock_contention1 = str(round(((Table_locks_waited2-Table_locks_waited1) * 1.00 / (Table_locks_immediate2-Table_locks_immediate1)) * 100, 2)) + "%"
     else:
@@ -490,6 +510,7 @@ def f_print_mysql_status(conn,interval):
           ["Query Cache Hits", Query_cache_hits1, Query_cache_hits2],
           ["Select full join per second", Select_full_join_per_second1, Select_full_join_per_second2],
           ["full select in all select", full_select_in_all_select1, full_select_in_all_select2],
+          ["full table scans", full_table_scans1, full_table_scans2],
           ["MyISAM Lock waiting ratio", lock_contention1, lock_contention2],
           ["Current open tables", str(Open_tables1), str(Open_tables2)],
           ["Accumulative open tables", str(Opened_tables1), str(Opened_tables2)],
@@ -649,3 +670,7 @@ if __name__=="__main__":
 
     conn.close()
     f_print_title('--@--  END  --@--')
+
+
+
+
