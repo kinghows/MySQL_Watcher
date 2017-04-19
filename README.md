@@ -1,7 +1,7 @@
 # MySQL_Watcher
 MySQL Watcher is a tool to help DBA's to trouble shoot MySQL performance.
 
-Test in Python-2.7,need install mysql-python.
+Test in Python-2.7+MySQL5.7,need install mysql-python.
 
 Edit MySQL connect info in dbset.ini.
 
