@@ -265,11 +265,9 @@ def f_sec2dhms(sec):
         return "%dm%ds"%(int(mins[0]),math.ceil(mins[1]))
 
 def f_get_mysql_status(conn):
-    mysqlstatus = {}
     query = "SHOW GLOBAL STATUS"
     rows = f_get_query_record(conn, query)
-    for row in rows:
-       mysqlstatus.setdefault(row[0], row[1])
+    mysqlstatus = dict(rows)
     return mysqlstatus
 
 def f_print_mysql_status(conn,interval):
