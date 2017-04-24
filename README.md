@@ -8,6 +8,7 @@ Linux overview just run in linux server local,not remote ,and must install psuti
 Edit MySQL connect info in dbset.ini.
 
 run:
+
 python mysql_watcher.py -p dbset.ini
 
 python mysql_watcher.py -p dbset.ini >mysql_report.txt
