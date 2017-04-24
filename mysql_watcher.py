@@ -320,11 +320,7 @@ def f_sec2dhms(sec):
 def f_get_mysql_status(conn):
     query = "SHOW GLOBAL STATUS"
     rows = f_get_query_record(conn, query)
-<<<<<<< HEAD
-    mysqlstatus=dict(rows)
-=======
     mysqlstatus = dict(rows)
->>>>>>> origin/master
     return mysqlstatus
 
 def f_print_mysql_status(conn,interval):
