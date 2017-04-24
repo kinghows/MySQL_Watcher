@@ -276,7 +276,6 @@ def f_print_linux_status(interval):
 
     #Uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
     ###打印参数###################################################################
-    title = "Linux Overview"
     f_print_title("Linux Overview")
     style = {1: 'a,6,l', 2: 'a,10,r',3: 'a,6,l', 4: 'a,10,r',5: 'a,6,l', 6: 'a,6,r',7: 'a,8,l',8: 'a,6,r',9: 'a,6,l', 10: 'a,6,r',11: 'a,6,l', 12: 'a,5,r',}
     rows=[
