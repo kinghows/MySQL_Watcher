@@ -5,6 +5,10 @@ Test in Python-2.7+MySQL5.7,need install mysql-python.
 
 Linux overview just run in linux server local,not remote ,and must install psutil.
 
+example:
+
+![example](https://github.com/kinghows/MySQL_Watcher/blob/master/example.jpg)
+
 Edit MySQL connect info in dbset.ini.
 
 run:
