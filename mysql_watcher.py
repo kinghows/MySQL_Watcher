@@ -203,40 +203,26 @@ def f_print_table_head(style):
         print v.split(',')[0].center(int(v.split(',')[1])),
     print tab3
 
-def f_print_table_body_noline(rows, style):
+def f_print_table_body(rows, style,tab):
     for row in rows:
         k = 0
         for col in row:
             k += 1
-            print ' ',
+            print tab,
             if style[k].split(',')[2] == 'l':
                 print str(col).ljust(int(style[k].split(',')[1])),
             elif style[k].split(',')[2] == 'r':
                 print str(col).rjust(int(style[k].split(',')[1])),
             else:
                 print str(col).center(int(style[k].split(',')[1])),
-        print ' '
-
-def f_print_table_body(rows, style):
-    for row in rows:
-        k = 0
-        for col in row:
-            k += 1
-            print tab3,
-            if style[k].split(',')[2] == 'l':
-                print str(col).ljust(int(style[k].split(',')[1])),
-            elif style[k].split(',')[2] == 'r':
-                print str(col).rjust(int(style[k].split(',')[1])),
-            else:
-                print str(col).center(int(style[k].split(',')[1])),
-        print tab3
+        print tab
 
 def f_print_table(rows,title,style):
     f_print_title(title)
     f_print_table_line(style)
     f_print_table_head(style)
     f_print_table_line(style)
-    f_print_table_body(rows, style)
+    f_print_table_body(rows, style,tab3)
     f_print_table_line(style)
 
 def f_print_query_table(conn, title, query, style):
@@ -299,7 +285,7 @@ def f_print_linux_status(interval):
           ["system", cpu_times.system,"iowait", cpu_times.iowait,"used", str(mem.used/1024/1024)+'M',"buffers", str(mem.buffers / 1024 / 1024) + 'M',"used", str(swap.used / 1024 / 1024) + 'M',"5 min", stats["min5"]],
           ["idle", cpu_times.idle,"steal", cpu_times.steal,"free", str(mem.free / 1024 / 1024) + 'M',"cached", str(mem.cached / 1024 / 1024) + 'M',"free", str(swap.free / 1024 / 1024) + 'M',"15 min", stats["min15"]]
          ]
-    f_print_table_body_noline(rows, style)
+    f_print_table_body(rows, style,' ')
 
 def f_sec2dhms(sec):
     day = 24*60*60
