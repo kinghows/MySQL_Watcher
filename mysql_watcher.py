@@ -10,6 +10,8 @@ import MySQLdb
 import ConfigParser
 import math
 import time
+import psutil
+import os
 
 filterwarnings('ignore', category = MySQLdb.Warning)
 
@@ -201,6 +203,20 @@ def f_print_table_head(style):
         print v.split(',')[0].center(int(v.split(',')[1])),
     print tab3
 
+def f_print_table_body_noline(rows, style):
+    for row in rows:
+        k = 0
+        for col in row:
+            k += 1
+            print ' ',
+            if style[k].split(',')[2] == 'l':
+                print str(col).ljust(int(style[k].split(',')[1])),
+            elif style[k].split(',')[2] == 'r':
+                print str(col).rjust(int(style[k].split(',')[1])),
+            else:
+                print str(col).center(int(style[k].split(',')[1])),
+        print ' '
+
 def f_print_table_body(rows, style):
     for row in rows:
         k = 0
@@ -248,6 +264,43 @@ def f_print_caption(dbinfo,mysql_version):
     rows = [[dbinfo[0], dbinfo[1], dbinfo[3], mysql_version]]
     f_print_table(rows, title, style)
 
+def f_print_linux_status(interval):
+    ###获取参数###################################################################
+    #scputimes(user=, nice, system, idle, iowait, irq, softirq,steal, guest, guest_nice)
+    cpu_times = psutil.cpu_times()
+    #scpustats(ctx_switches, interrupts, soft_interrupts, syscalls)
+    #cpu_stats = psutil.cpu_stats()
+    # svmem(total , available, percent, used , free, active, inactive, buffers, cached, shared)
+    mem = psutil.virtual_memory()
+    # sswap(total, used, free, percent, sin, sout)
+    swap = psutil.swap_memory()
+    #sdiskusage(total, used, free, percent)
+    #disk_usage = psutil.disk_usage('/')
+    #sdiskio(read_count, write_count, read_bytes, write_bytes, read_time, write_time)
+    #disk_io_counters = psutil.disk_io_counters()
+    #snetio(bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout)
+    #net = psutil.net_io_counters()
+    #load
+    try:
+        load = os.getloadavg()
+    except (OSError, AttributeError):
+        stats = {}
+    else:
+        stats = {'min1': load[0], 'min5': load[1], 'min15': load[2]}
+
+    #Uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
+    ###打印参数###################################################################
+    title = "Linux Overview"
+    f_print_title("Linux Overview")
+    style = {1: 'a,6,l', 2: 'a,10,r',3: 'a,6,l', 4: 'a,10,r',5: 'a,6,l', 6: 'a,6,r',7: 'a,8,l',8: 'a,6,r',9: 'a,6,l', 10: 'a,6,r',11: 'a,6,l', 12: 'a,5,r',}
+    rows=[
+          ["CPU", str(psutil.cpu_percent(interval=1))+'%',"nice", cpu_times.nice,"MEM", str(mem.percent) + '%',"active", str(mem.active / 1024 / 1024) + 'M',"SWAP", str(swap.percent)+'%',"LOAD", str(psutil.cpu_count())+'core'],
+          ["user", cpu_times.user,"irq", cpu_times.irq,"total", str(mem.total/1024/1024)+'M',"inactive", str(mem.inactive / 1024 / 1024) + 'M',"total", str(swap.total / 1024 / 1024) + 'M',"1 min", stats["min1"]],
+          ["system", cpu_times.system,"iowait", cpu_times.iowait,"used", str(mem.used/1024/1024)+'M',"buffers", str(mem.buffers / 1024 / 1024) + 'M',"used", str(swap.used / 1024 / 1024) + 'M',"5 min", stats["min5"]],
+          ["idle", cpu_times.idle,"steal", cpu_times.steal,"free", str(mem.free / 1024 / 1024) + 'M',"cached", str(mem.cached / 1024 / 1024) + 'M',"free", str(swap.free / 1024 / 1024) + 'M',"15 min", stats["min15"]]
+         ]
+    f_print_table_body_noline(rows, style)
+
 def f_sec2dhms(sec):
     day = 24*60*60
     hour = 60*60
@@ -265,11 +318,9 @@ def f_sec2dhms(sec):
         return "%dm%ds"%(int(mins[0]),math.ceil(mins[1]))
 
 def f_get_mysql_status(conn):
-    mysqlstatus = {}
     query = "SHOW GLOBAL STATUS"
     rows = f_get_query_record(conn, query)
-    for row in rows:
-       mysqlstatus.setdefault(row[0], row[1])
+    mysqlstatus=dict(rows)
     return mysqlstatus
 
 def f_print_mysql_status(conn,interval):
@@ -542,6 +593,9 @@ if __name__=="__main__":
     query ="select @@version"
     mysql_version = f_get_query_value(conn, query)
     f_print_caption(dbinfo,mysql_version)
+
+    if config.get("option","linux_overview")=='ON':
+        f_print_linux_status(interval)
 
     if config.get("option","database_overview")=='ON':
         f_print_mysql_status(conn,interval)
