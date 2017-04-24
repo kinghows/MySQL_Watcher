@@ -230,7 +230,7 @@ def f_print_query_table(conn, title, query, style):
     f_print_table(rows,title,style)
 
 def f_print_optimizer_switch(conn):
-    title = "OPTIMIZER SWITCH"
+    title = "Optimizer Switch"
     style = {1: 'switch_name,40,l', 2: 'value,10,r'}
     rows =[]
     query="select variable_value from performance_schema.global_variables where variable_name='optimizer_switch'"
@@ -245,7 +245,7 @@ def f_print_caption(dbinfo,mysql_version):
     print tab5,'Kinghow@hotmail.com'.center(linesize-4),tab5
     print tab5*linesize
 
-    title = "BASIC INFORMATION"
+    title = "Basic Information"
     style = {1: 'host,15,c', 2: 'user,15,c', 3: 'db,20,c', 4: 'mysql version,41,c'}
     rows = [[dbinfo[0], dbinfo[1], dbinfo[3], mysql_version]]
     f_print_table(rows, title, style)
@@ -524,7 +524,7 @@ def f_print_mysql_status(conn,interval):
     Temp_tables_to_disk2 = str(round((Created_tmp_disk_tables2 * 1.0 / Created_tmp_tables2) * 100, 2)) + "%"
 
     ###打印参数###################################################################
-    title = "Database Overview"
+    title = "MySQL Overview"
     style = {1: 'Key,40,l', 2: 'In '+Uptimes1+',20,r', 3: 'Total,20,r'}
     rows=[
           ["Uptimes",Uptimes1,Uptimes2],
@@ -582,11 +582,11 @@ if __name__=="__main__":
     if config.get("option","linux_overview")=='ON':
         f_print_linux_status(interval)
 
-    if config.get("option","database_overview")=='ON':
+    if config.get("option","mysql_overview")=='ON':
         f_print_mysql_status(conn,interval)
 
     if config.get("option","sys_parm")=='ON':
-        title = "SYSTEM PARAMETER "
+        title = "System Parameter "
         query = "SELECT variable_name,IF(INSTR(variable_name,'size'), \
                  CASE  \
                  WHEN variable_value>=1024*1024*1024*1024*1024 THEN CONCAT(variable_value/1024/1024/1024/1024/1024,'P') \
@@ -707,7 +707,7 @@ if __name__=="__main__":
         f_print_query_table(conn, title, query, style)
 
     conn.close()
-    f_print_title('--@--  END  --@--')
+    f_print_title('--@--  End  --@--')
 
 
 
