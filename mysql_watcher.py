@@ -217,19 +217,57 @@ def f_print_table_body(rows, style,tab):
                 print str(col).center(int(style[k].split(',')[1])),
         print tab
 
-def f_print_table(rows,title,style):
-    f_print_title(title)
-    f_print_table_line(style)
-    f_print_table_head(style)
-    f_print_table_line(style)
-    f_print_table_body(rows, style,tab3)
-    f_print_table_line(style)
+def f_print_table_html(rows, title, style):
+    print """<p /><h3 class="awr"><a class="awr" name="99999"></a>""" + title + "</h3><p />"
+    print """<table border="1">"""
 
-def f_print_query_table(conn, title, query, style):
+    print """<tr>""",
+    for k in style.keys():
+        v = style[k]
+        print """<th class="awrbg">""",
+        print v.split(',')[0],
+        print """</th>""",
+    print """</tr>"""
+
+    linenum = 0
+    for row in rows:
+        k = 0
+        linenum += 1
+        print "<tr>",
+        if linenum % 2 == 0:
+            classs='awrc'
+        else:
+            classs='awrnc'
+
+        for col in row:
+            k += 1
+            if style[k].split(',')[2] == 'r':
+                print """<td align="right" class='"""+classs+"'>"+str(col)+"</td>",
+            else:
+                print """<td class='"""+classs+"'>"+str(col)+"</td>",
+        print "</tr>"
+    print """</table>
+<br /><a class="awr" href="#top">Back to Top</a>
+<p />
+<p />
+        """
+
+def f_print_table(rows,title,style,save_as):
+    if save_as == "txt":
+        f_print_title(title)
+        f_print_table_line(style)
+        f_print_table_head(style)
+        f_print_table_line(style)
+        f_print_table_body(rows, style, tab3)
+        f_print_table_line(style)
+    elif save_as == "html":
+        f_print_table_html(rows, title, style)
+
+def f_print_query_table(conn, title, query, style,save_as):
     rows = f_get_query_record(conn, query)
-    f_print_table(rows,title,style)
+    f_print_table(rows,title,style,save_as)
 
-def f_print_optimizer_switch(conn):
+def f_print_optimizer_switch(conn,save_as):
     title = "Optimizer Switch"
     style = {1: 'switch_name,40,l', 2: 'value,10,r'}
     rows =[]
@@ -237,20 +275,56 @@ def f_print_optimizer_switch(conn):
     recode = f_get_query_record(conn, query)
     for col in recode[0][0].split(','):
         rows.append([col.split('=')[0],col.split('=')[1]])
-    f_print_table(rows, title, style)
+    f_print_table(rows, title, style,save_as)
 
-def f_print_caption(dbinfo,mysql_version):
-    print tab5*linesize
-    print tab5,'MySQL Watcher  V1.0'.center(linesize-4),tab5
-    print tab5,'Kinghow@hotmail.com'.center(linesize-4),tab5
-    print tab5*linesize
+def f_print_caption(dbinfo,mysql_version,save_as):
+    if save_as == "txt":
+        print tab5 * linesize
+        print tab5, 'MySQL Watcher  V1.0'.center(linesize - 4), tab5
+        print tab5, 'Kinghow@hotmail.com'.center(linesize - 4), tab5
+        print tab5 * linesize
+    elif save_as == "html":
+        print """
+<html><head><title>MySQL Watcher  V1.0  Kinghow@hotmail.com </title>
+<style type=\"text/css\">
+body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
+pre.awr  {font:8pt Courier;color:black; background:White;}
+h1.awr   {font:bold 20pt Arial,Helvetica,Geneva,sans-serif;color:#336699;background-color:White;border-bottom:1px solid #cccc99;margin-top:0pt; margin-bottom:0pt;padding:0px 0px 0px 0px;}
+h2.awr   {font:bold 18pt Arial,Helvetica,Geneva,sans-serif;color:#336699;background-color:White;margin-top:4pt; margin-bottom:0pt;}
+h3.awr {font:bold 16pt Arial,Helvetica,Geneva,sans-serif;color:#336699;background-color:White;margin-top:4pt; margin-bottom:0pt;}
+li.awr {font: 8pt Arial,Helvetica,Geneva,sans-serif; color:black; background:White;}
+th.awrnobg {font:bold 8pt Arial,Helvetica,Geneva,sans-serif; color:black; background:White;padding-left:4px; padding-right:4px;padding-bottom:2px}
+th.awrbg {font:bold 8pt Arial,Helvetica,Geneva,sans-serif; color:White; background:#0066CC;padding-left:4px; padding-right:4px;padding-bottom:2px}
+td.awrnc {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;}
+td.awrc    {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;}
+td.awrnclb {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;border-left: thin solid black;}
+td.awrncbb {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;border-left: thin solid black;border-right: thin solid black;}
+td.awrncrb {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;border-right: thin solid black;}
+td.awrcrb    {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;border-right: thin solid black;}
+td.awrclb    {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;border-left: thin solid black;}
+td.awrcbb    {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;border-left: thin solid black;border-right: thin solid black;}
+a.awr {font:bold 8pt Arial,Helvetica,sans-serif;color:#663300; vertical-align:top;margin-top:0pt; margin-bottom:0pt;}
+td.awrnct {font:8pt Arial,Helvetica,Geneva,sans-serif;border-top: thin solid black;color:black;background:White;vertical-align:top;}
+td.awrct   {font:8pt Arial,Helvetica,Geneva,sans-serif;border-top: thin solid black;color:black;background:#FFFFCC; vertical-align:top;}
+td.awrnclbt  {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;border-top: thin solid black;border-left: thin solid black;}
+td.awrncbbt  {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;border-left: thin solid black;border-right: thin solid black;border-top: thin solid black;}
+td.awrncrbt {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:White;vertical-align:top;border-top: thin solid black;border-right: thin solid black;}
+td.awrcrbt     {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;border-top: thin solid black;border-right: thin solid black;}
+td.awrclbt     {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;border-top: thin solid black;border-left: thin solid black;}
+td.awrcbbt   {font:8pt Arial,Helvetica,Geneva,sans-serif;color:black;background:#FFFFCC; vertical-align:top;border-top: thin solid black;border-left: thin solid black;border-right: thin solid black;}
+table.tdiff {  border_collapse: collapse; }
+</style></head><body class="awr">
+<h1 class="awr">
+WORKLOAD REPOSITORY report for
+</h1>
+       """
 
     title = "Basic Information"
     style = {1: 'host,15,c', 2: 'user,15,c', 3: 'db,20,c', 4: 'mysql version,41,c'}
     rows = [[dbinfo[0], dbinfo[1], dbinfo[3], mysql_version]]
-    f_print_table(rows, title, style)
+    f_print_table(rows, title, style,save_as)
 
-def f_print_linux_status(interval):
+def f_print_linux_status(save_as):
     ###获取参数###################################################################
     #scputimes(user=, nice, system, idle, iowait, irq, softirq,steal, guest, guest_nice)
     cpu_times = psutil.cpu_times()
@@ -276,15 +350,20 @@ def f_print_linux_status(interval):
 
     #Uptime = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
     ###打印参数###################################################################
-    f_print_title("Linux Overview")
-    style = {1: 'a,6,l', 2: 'a,10,r',3: 'a,6,l', 4: 'a,10,r',5: 'a,6,l', 6: 'a,6,r',7: 'a,8,l',8: 'a,6,r',9: 'a,6,l', 10: 'a,6,r',11: 'a,6,l', 12: 'a,5,r',}
+    style = {1: '&nbsp;,6,l', 2: '&nbsp;,10,r',3: '&nbsp;,6,l', 4: '&nbsp;,10,r',5: '&nbsp;,6,l', 6: '&nbsp;,6,r',7: '&nbsp;,8,l',8: '&nbsp;,6,r',9: '&nbsp;,6,l', 10: '&nbsp;,6,r',11: '&nbsp;,6,l', 12: '&nbsp;,5,r',}
     rows=[
           ["CPU", str(psutil.cpu_percent(interval=1))+'%',"nice", cpu_times.nice,"MEM", str(mem.percent) + '%',"active", str(mem.active / 1024 / 1024) + 'M',"SWAP", str(swap.percent)+'%',"LOAD", str(psutil.cpu_count())+'core'],
           ["user", cpu_times.user,"irq", cpu_times.irq,"total", str(mem.total/1024/1024)+'M',"inactive", str(mem.inactive / 1024 / 1024) + 'M',"total", str(swap.total / 1024 / 1024) + 'M',"1 min", stats["min1"]],
           ["system", cpu_times.system,"iowait", cpu_times.iowait,"used", str(mem.used/1024/1024)+'M',"buffers", str(mem.buffers / 1024 / 1024) + 'M',"used", str(swap.used / 1024 / 1024) + 'M',"5 min", stats["min5"]],
           ["idle", cpu_times.idle,"steal", cpu_times.steal,"free", str(mem.free / 1024 / 1024) + 'M',"cached", str(mem.cached / 1024 / 1024) + 'M',"free", str(swap.free / 1024 / 1024) + 'M',"15 min", stats["min15"]]
          ]
-    f_print_table_body(rows, style,' ')
+
+    title = "Linux Overview"
+    if save_as == "txt":
+        f_print_title(title)
+        f_print_table_body(rows, style,' ')
+    elif save_as == "html":
+        f_print_table_html(rows, title, style)
 
 def f_sec2dhms(sec):
     day = 24*60*60
@@ -308,7 +387,7 @@ def f_get_mysql_status(conn):
     mysqlstatus = dict(rows)
     return mysqlstatus
 
-def f_print_mysql_status(conn,interval):
+def f_print_mysql_status(conn,interval,save_as):
     ###获取参数###################################################################
     mysqlstatus1 = f_get_mysql_status(conn)
     time.sleep(interval)
@@ -552,18 +631,21 @@ def f_print_mysql_status(conn,interval):
           ["Temp tables to disk(<10%)", Temp_tables_to_disk1, Temp_tables_to_disk2]
           ]
 
-    f_print_table(rows, title, style)
+    f_print_table(rows, title, style,save_as)
 
 if __name__=="__main__":
     dbinfo=["127.0.0.1","root","","mysql",3306] #host,user,passwd,db,port
     config_file=""
     mysql_version=""
     option = []
+    save_as = "txt"
 
-    opts, args = getopt.getopt(sys.argv[1:], "p:")
+    opts, args = getopt.getopt(sys.argv[1:], "p:s:")
     for o,v in opts:
         if o == "-p":
             config_file = v
+        elif o == "-s":
+            save_as = v
 
     config = ConfigParser.ConfigParser()
     config.readfp(open(config_file,"rb"))
@@ -577,13 +659,15 @@ if __name__=="__main__":
     conn = f_get_conn(dbinfo)
     query ="select @@version"
     mysql_version = f_get_query_value(conn, query)
-    f_print_caption(dbinfo,mysql_version)
+    f_print_caption(dbinfo,mysql_version,save_as)
+
+
 
     if config.get("option","linux_overview")=='ON':
-        f_print_linux_status(interval)
+        f_print_linux_status(save_as)
 
     if config.get("option","mysql_overview")=='ON':
-        f_print_mysql_status(conn,interval)
+        f_print_mysql_status(conn,interval,save_as)
 
     if config.get("option","sys_parm")=='ON':
         title = "System Parameter "
@@ -599,15 +683,15 @@ if __name__=="__main__":
                  FROM performance_schema.global_variables  \
                  where variable_name in ('" + "','".join(list(SYS_PARM_FILTER)) + "')"
         style = {1: 'parameter_name,40,l', 2: 'value,30,r'}
-        f_print_query_table(conn, title, query, style)
-        f_print_optimizer_switch(conn)
+        f_print_query_table(conn, title, query, style,save_as)
+        f_print_optimizer_switch(conn,save_as)
 
     if config.get ( "option", "replication" ) == 'ON':
         title = "Replication"
         query = """SELECT USER,HOST,command,CONCAT(FLOOR(TIME/86400),'d',FLOOR(TIME/3600)%24,'h',FLOOR(TIME/60)%60,'m',TIME%60,'s') TIMES,state
                    FROM information_schema.processlist WHERE COMMAND = 'Binlog Dump' OR COMMAND = 'Binlog Dump GTID'"""
         style = {1: 'USER,10,l', 2: 'HOST,20,l', 3: 'command,16,l', 4: 'TIMES,13,r', 5: 'state,61,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "connect_count" ) == 'ON':
         title = "Connect Count"
@@ -616,7 +700,7 @@ if __name__=="__main__":
                    WHERE Command !='' AND DB !='information_schema'
                    GROUP BY HOSTS,USER,db,command"""
         style = {1: 'HOSTS,15,l', 2: 'USER,20,l', 3: 'db,20,l', 4: 'command,7,l', 5: 'COUNT(*),8,r', 6: 'SUM(TIME),9,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "avg_query_time" ) == 'ON':
         title = "Avg Query Time"
@@ -625,13 +709,13 @@ if __name__=="__main__":
                    WHERE schema_name IS NOT NULL
                    GROUP BY schema_name"""
         style = {1: 'schema_name,30,l', 2: 'COUNT,15,r', 3: 'avg_microsec,15,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "slow_query_top10" ) == 'ON':
         title = "Slow Query Top10"
         query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT 10"
         style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'total_latency,13,r', 5: 'max_latency,11,r', 6: 'avg_latency,11,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "err_sql_count" ) == 'ON':
         title = "Err Sql Count"
@@ -640,13 +724,13 @@ if __name__=="__main__":
                    WHERE sum_errors > 0
                    GROUP BY schema_name"""
         style = {1: 'schema_name,30,l', 2: 'err_count,15,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "err_sql_top10" ) == 'ON':
         title = "Err SQL Top10"
         query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT 10"
         style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'ERRORS,10,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "database_size" ) == 'ON':
         title = "Database Size"
@@ -662,7 +746,7 @@ if __name__=="__main__":
                    CONCAT(ROUND(SUM(data_length)/(1024*1024),2) + ROUND(SUM(index_length)/(1024*1024),2),'MB') AS 'DB Size'
                    FROM information_schema.tables"""
         style = {1: 'table_schema,30,l', 2: 'Table Size,15,r', 3: 'Index Size,15,r', 4: 'DB Size,15,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get("option","object_count")=='ON':
         title = "Object Count"
@@ -677,7 +761,8 @@ if __name__=="__main__":
                  SELECT 'EVENT' AS object_type, COUNT(0) AS COUNT FROM information_schema.events \
                  WHERE information_schema.events.EVENT_SCHEMA='" + dbinfo[3] + "'"
         style = {1:'object_type,30,l',2: 'COUNT,10,r'}
-        f_print_query_table(conn, title, query, style)
+        if save_as == "txt":
+            f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "table_info" ) == 'ON':
         title = "Table Info"
@@ -689,7 +774,7 @@ if __name__=="__main__":
                    where table_schema='""" + dbinfo[3] + "'"
         style = {1: 'table_name,40,l', 2: 'engine,10,l', 3: 'format,10,l', 4: 'table_rows,10,r', 5: 'avg_row,10,r',
                  6: 'data_mb,10,r', 7: 'index_mb,10,r', 8: 'total_mb,10,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "index_info" ) == 'ON':
         title = "Index Info"
@@ -698,16 +783,24 @@ if __name__=="__main__":
                    where table_schema='""" + dbinfo[3] + "'"
         style = {1: 'index_name,40,l', 2: 'non_unique,10,l', 3: 'seq_in_index,12,l', 4: 'column_name,30,r',
                  5: 'collation,10,r', 6: 'cardinality,11,r', 7: 'nullable,10,r', 8: 'index_type,10,r'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     if config.get("option", "schema_unused_indexes") == 'ON':
         title = "Schema Unused Indexes"
         query = "SELECT object_schema,object_name,index_name FROM sys.schema_unused_indexes where object_schema='" +  dbinfo[3] + "'"
         style = {1: 'object_schema,30,l', 2: 'object_name,40,l', 3: 'index_name,50,l'}
-        f_print_query_table(conn, title, query, style)
+        f_print_query_table(conn, title, query, style,save_as)
 
     conn.close()
-    f_print_title('--@--  End  --@--')
+
+    if save_as == "txt":
+        f_print_title('--@--  End  --@--')
+    elif save_as == "html":
+        print """
+<p />
+End of Report
+</body></html>
+        """
 
 
 
