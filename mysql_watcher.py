@@ -267,11 +267,11 @@ def f_print_query_table(conn, title, query, style,save_as):
     rows = f_get_query_record(conn, query)
     f_print_table(rows,title,style,save_as)
 
-def f_print_optimizer_switch(conn,save_as):
+def f_print_optimizer_switch(conn,save_as,sysdb):
     title = "Optimizer Switch"
     style = {1: 'switch_name,40,l', 2: 'value,10,r'}
     rows =[]
-    query="select variable_value from performance_schema.global_variables where variable_name='optimizer_switch'"
+    query="select variable_value from "+sysdb+".global_variables where variable_name='optimizer_switch'"
     recode = f_get_query_record(conn, query)
     for col in recode[0][0].split(','):
         rows.append([col.split('=')[0],col.split('=')[1]])
@@ -551,7 +551,10 @@ def f_print_mysql_status(conn,interval,save_as):
         Key_buffer_read_hits1 = str(round((1 - (Key_reads2-Key_reads1) * 1.0 / (Key_read_requests2-Key_read_requests1)) * 100, 2)) + "%"
     else:
         Key_buffer_read_hits1 = '0.0%'
-    Key_buffer_read_hits2 = str(round((1 - Key_reads2* 1.0 / Key_read_requests2) * 100, 2)) + "%"
+    if Key_read_requests2 <> 0:
+        Key_buffer_read_hits2 = str(round((1 - Key_reads2* 1.0 / Key_read_requests2) * 100, 2)) + "%"
+    else:
+        Key_buffer_read_hits2 = '0.0%'
 
     if (Key_write_requests2-Key_write_requests1)<>0:
         Key_buffer_write_hits1 = str(round((1 - (Key_writes2-Key_writes1)* 1.0 / (Key_write_requests2-Key_write_requests1)) * 100, 2)) + "%"
@@ -580,7 +583,7 @@ def f_print_mysql_status(conn,interval,save_as):
     if (Com_select2-Com_select1) > 0:
         full_select_in_all_select1 = str(round(((Select_full_join2-Select_full_join1) * 1.0 / (Com_select2-Com_select1)) * 100, 2)) + "%"
     else:
-        Select_full_join_per_second1 = '0.0%'
+        full_select_in_all_select1 = '0.0%'
     full_select_in_all_select2 = str(round((Select_full_join2 * 1.0 / Com_select2) * 100, 2)) + "%"
 
     #((Handler_read_rnd_next + Handler_read_rnd) / (Handler_read_rnd_next + Handler_read_rnd + Handler_read_first + Handler_read_next + Handler_read_key + Handler_read_prev)).
@@ -661,7 +664,10 @@ if __name__=="__main__":
     mysql_version = f_get_query_value(conn, query)
     f_print_caption(dbinfo,mysql_version,save_as)
 
-
+    if "5.7" in mysql_version:
+        sysdb = "performance_schema"
+    else:
+        sysdb = "information_schema"
 
     if config.get("option","linux_overview")=='ON':
         f_print_linux_status(save_as)
@@ -680,11 +686,11 @@ if __name__=="__main__":
                  WHEN variable_value>=1024 THEN CONCAT(variable_value/1024,'K') \
                  ELSE variable_value END , \
                  variable_value)  \
-                 FROM performance_schema.global_variables  \
+                 FROM "+sysdb+".global_variables  \
                  where variable_name in ('" + "','".join(list(SYS_PARM_FILTER)) + "')"
         style = {1: 'parameter_name,40,l', 2: 'value,30,r'}
         f_print_query_table(conn, title, query, style,save_as)
-        f_print_optimizer_switch(conn,save_as)
+        f_print_optimizer_switch(conn,save_as,sysdb)
 
     if config.get ( "option", "replication" ) == 'ON':
         title = "Replication"
@@ -702,7 +708,7 @@ if __name__=="__main__":
         style = {1: 'HOSTS,15,l', 2: 'USER,20,l', 3: 'db,20,l', 4: 'command,7,l', 5: 'COUNT(*),8,r', 6: 'SUM(TIME),9,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "avg_query_time" ) == 'ON':
+    if config.get ( "option", "avg_query_time" ) == 'ON' and ("5.7" in mysql_version):
         title = "Avg Query Time"
         query = """SELECT schema_name,SUM(count_star) COUNT, ROUND((SUM(sum_timer_wait)/SUM(count_star))/1000000) avg_microsec
                    FROM performance_schema.events_statements_summary_by_digest
@@ -711,13 +717,13 @@ if __name__=="__main__":
         style = {1: 'schema_name,30,l', 2: 'COUNT,15,r', 3: 'avg_microsec,15,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "slow_query_top10" ) == 'ON':
+    if config.get ( "option", "slow_query_top10" ) == 'ON' and ("5.7" in mysql_version):
         title = "Slow Query Top10"
         query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT 10"
         style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'total_latency,13,r', 5: 'max_latency,11,r', 6: 'avg_latency,11,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "err_sql_count" ) == 'ON':
+    if config.get ( "option", "err_sql_count" ) == 'ON' and ("5.7" in mysql_version):
         title = "Err Sql Count"
         query = """SELECT schema_name,SUM(sum_errors) err_count
                    FROM performance_schema.events_statements_summary_by_digest
@@ -726,7 +732,7 @@ if __name__=="__main__":
         style = {1: 'schema_name,30,l', 2: 'err_count,15,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "err_sql_top10" ) == 'ON':
+    if config.get ( "option", "err_sql_top10" ) == 'ON' and ("5.7" in mysql_version):
         title = "Err SQL Top10"
         query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT 10"
         style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'ERRORS,10,r'}
@@ -785,7 +791,7 @@ if __name__=="__main__":
                  5: 'collation,10,r', 6: 'cardinality,11,r', 7: 'nullable,10,r', 8: 'index_type,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "schema_unused_indexes") == 'ON':
+    if config.get("option", "schema_unused_indexes") == 'ON' and ("5.7" in mysql_version):
         title = "Schema Unused Indexes"
         query = "SELECT object_schema,object_name,index_name FROM sys.schema_unused_indexes where object_schema='" +  dbinfo[3] + "'"
         style = {1: 'object_schema,30,l', 2: 'object_name,40,l', 3: 'index_name,50,l'}
