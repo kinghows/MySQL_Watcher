@@ -830,12 +830,12 @@ if __name__=="__main__":
         style = {1: 'host,15,l', 2: 'event_name,40,r', 3: 'total,10,r', 4: 'total_ltc,10,r', 5: 'max_ltc,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "host_summary_by_file_io_type") == 'ON' and sys_schema_exist:
+    if config.get("option", "host_summary_by_file_io") == 'ON' and sys_schema_exist:
         title = "host_summary_by_file_io_type"
-        #•host 主机 event_name IO事件名称 total 该主机发生的事件 total_latency 该主机发生IO事件总延迟时间 max_latency 该主机IO事件中最大的延迟时间
-        query = """SELECT host,event_name,total,total_latency,max_latency
-                    FROM sys.host_summary_by_file_io_type"""
-        style = {1: 'host,15,l', 2: 'event_name,40,r', 3: 'total,10,r', 4: 'total_ltc,10,r', 5: 'max_ltc,10,r'}
+        #•host 主机 ios IO事件总数 io_latency IO总的延迟时间
+        query = """SELECT host,ios,io_latency
+                    FROM sys.host_summary_by_file_io"""
+        style = {1: 'host,15,l', 2: 'ios,10,r', 3: 'io_latency,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
     conn.close()
 
