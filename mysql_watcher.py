@@ -267,11 +267,21 @@ def f_print_query_table(conn, title, query, style,save_as):
     rows = f_get_query_record(conn, query)
     f_print_table(rows,title,style,save_as)
 
-def f_print_optimizer_switch(conn,save_as,sysdb):
+def f_is_sys_schema_exist(conn):
+    query = "SHOW DATABASES"
+    rows = f_get_query_record(conn, query)
+    exist=False
+    for row in rows:
+       if row[0]=='sys':
+           exist = True
+           break
+    return exist
+
+def f_print_optimizer_switch(conn,save_as,perfor_or_infor):
     title = "Optimizer Switch"
     style = {1: 'switch_name,40,l', 2: 'value,10,r'}
     rows =[]
-    query="select variable_value from "+sysdb+".global_variables where variable_name='optimizer_switch'"
+    query="select variable_value from "+perfor_or_infor+".global_variables where variable_name='optimizer_switch'"
     recode = f_get_query_record(conn, query)
     for col in recode[0][0].split(','):
         rows.append([col.split('=')[0],col.split('=')[1]])
@@ -352,10 +362,10 @@ def f_print_linux_status(save_as):
     ###打印参数###################################################################
     style = {1: '&nbsp;,6,l', 2: '&nbsp;,10,r',3: '&nbsp;,6,l', 4: '&nbsp;,10,r',5: '&nbsp;,6,l', 6: '&nbsp;,6,r',7: '&nbsp;,8,l',8: '&nbsp;,6,r',9: '&nbsp;,6,l', 10: '&nbsp;,6,r',11: '&nbsp;,6,l', 12: '&nbsp;,5,r',}
     rows=[
-          ["CPU", str(psutil.cpu_percent(interval=1))+'%',"nice", cpu_times.nice,"MEM", str(mem.percent) + '%',"active", str(mem.active / 1024 / 1024) + 'M',"SWAP", str(swap.percent)+'%',"LOAD", str(psutil.cpu_count())+'core'],
-          ["user", cpu_times.user,"irq", cpu_times.irq,"total", str(mem.total/1024/1024)+'M',"inactive", str(mem.inactive / 1024 / 1024) + 'M',"total", str(swap.total / 1024 / 1024) + 'M',"1 min", stats["min1"]],
-          ["system", cpu_times.system,"iowait", cpu_times.iowait,"used", str(mem.used/1024/1024)+'M',"buffers", str(mem.buffers / 1024 / 1024) + 'M',"used", str(swap.used / 1024 / 1024) + 'M',"5 min", stats["min5"]],
-          ["idle", cpu_times.idle,"steal", cpu_times.steal,"free", str(mem.free / 1024 / 1024) + 'M',"cached", str(mem.cached / 1024 / 1024) + 'M',"free", str(swap.free / 1024 / 1024) + 'M',"15 min", stats["min15"]]
+          ["CPU", str(psutil.cpu_percent(interval=1))+'%',"nice", cpu_times.nice,"MEM", str(mem.percent) + '%',"active", str(mem.active/1024/1024) + 'M',"SWAP", str(swap.percent)+'%',"LOAD", str(psutil.cpu_count())+'core'],
+          ["user", cpu_times.user,"irq", cpu_times.irq,"total", str(mem.total/1024/1024)+'M',"inactive", str(mem.inactive/1024/1024) + 'M',"total", str(swap.total/1024/1024) + 'M',"1 min", stats["min1"]],
+          ["system", cpu_times.system,"iowait", cpu_times.iowait,"used", str(mem.used/1024/1024)+'M',"buffers", str(mem.buffers/1024/1024) + 'M',"used", str(swap.used/1024/1024) + 'M',"5 min", stats["min5"]],
+          ["idle", cpu_times.idle,"steal", cpu_times.steal,"free", str(mem.free/1024/1024) + 'M',"cached", str(mem.cached/1024/1024) + 'M',"free", str(swap.free/1024/1024) + 'M',"15 min", stats["min15"]]
          ]
 
     title = "Linux Overview"
@@ -665,9 +675,11 @@ if __name__=="__main__":
     f_print_caption(dbinfo,mysql_version,save_as)
 
     if "5.7" in mysql_version:
-        sysdb = "performance_schema"
+        perfor_or_infor = "performance_schema"
     else:
-        sysdb = "information_schema"
+        perfor_or_infor = "information_schema"
+        
+    sys_schema_exist = f_is_sys_schema_exist(conn)
 
     if config.get("option","linux_overview")=='ON':
         f_print_linux_status(save_as)
@@ -686,11 +698,11 @@ if __name__=="__main__":
                  WHEN variable_value>=1024 THEN CONCAT(variable_value/1024,'K') \
                  ELSE variable_value END , \
                  variable_value)  \
-                 FROM "+sysdb+".global_variables  \
+                 FROM "+perfor_or_infor+".global_variables  \
                  where variable_name in ('" + "','".join(list(SYS_PARM_FILTER)) + "')"
         style = {1: 'parameter_name,40,l', 2: 'value,30,r'}
         f_print_query_table(conn, title, query, style,save_as)
-        f_print_optimizer_switch(conn,save_as,sysdb)
+        f_print_optimizer_switch(conn,save_as,perfor_or_infor)
 
     if config.get ( "option", "replication" ) == 'ON':
         title = "Replication"
@@ -717,7 +729,7 @@ if __name__=="__main__":
         style = {1: 'schema_name,30,l', 2: 'COUNT,15,r', 3: 'avg_microsec,15,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "slow_query_top10" ) == 'ON' and ("5.7" in mysql_version):
+    if config.get ( "option", "slow_query_top10" ) == 'ON' and sys_schema_exist:
         title = "Slow Query Top10"
         query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT 10"
         style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'total_latency,13,r', 5: 'max_latency,11,r', 6: 'avg_latency,11,r'}
@@ -732,7 +744,7 @@ if __name__=="__main__":
         style = {1: 'schema_name,30,l', 2: 'err_count,15,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "err_sql_top10" ) == 'ON' and ("5.7" in mysql_version):
+    if config.get ( "option", "err_sql_top10" ) == 'ON' and sys_schema_exist:
         title = "Err SQL Top10"
         query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT 10"
         style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'ERRORS,10,r'}
@@ -791,12 +803,40 @@ if __name__=="__main__":
                  5: 'collation,10,r', 6: 'cardinality,11,r', 7: 'nullable,10,r', 8: 'index_type,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "schema_unused_indexes") == 'ON' and ("5.7" in mysql_version):
+    if config.get("option", "schema_unused_indexes") == 'ON' and sys_schema_exist:
         title = "Schema Unused Indexes"
         query = "SELECT object_schema,object_name,index_name FROM sys.schema_unused_indexes where object_schema='" +  dbinfo[3] + "'"
         style = {1: 'object_schema,30,l', 2: 'object_name,40,l', 3: 'index_name,50,l'}
         f_print_query_table(conn, title, query, style,save_as)
 
+    if config.get("option", "host_summary") == 'ON' and sys_schema_exist:
+        title = "host_summary"
+        #host 监听连接过的主机 statements 当前主机执行的语句总数 statement_latency 语句等待时间（延迟时间） statement_avg_latency 执行语句平均延迟时间 table_scans 表扫描次数
+        #file_ios io时间总数 file_io_latency 文件io延迟 current_connections 当前连接数 total_connections 总链接数 unique_users 该主机的唯一用户数 current_memory 当前账户分配的内存
+        #total_memory_allocated 该主机分配的内存总数
+        query = """SELECT host,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
+                    total_connections,unique_users,current_memory,total_memory_allocated
+                    FROM sys.host_summary"""
+        style = {1: 'host,15,l', 2: 'statements,10,r', 3: 'st_ltc,10,r', 4: 'st_avg_ltc,10,r', 5: 'table_scan,10,r',
+                 6: 'file_ios,10,r', 7: 'f_io_ltc,10,r', 8: 'cur_conns,10,r', 9: 'total_conn,10,r',
+                 10: 'unq_users,10,r', 11: 'cur_mem,10,r', 12: 'tal_mem_alc,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "host_summary_by_file_io_type") == 'ON' and sys_schema_exist:
+        title = "host_summary_by_file_io_type"
+        #•host 主机 event_name IO事件名称 total 该主机发生的事件 total_latency 该主机发生IO事件总延迟时间 max_latency 该主机IO事件中最大的延迟时间
+        query = """SELECT host,event_name,total,total_latency,max_latency
+                    FROM sys.host_summary_by_file_io_type"""
+        style = {1: 'host,15,l', 2: 'event_name,40,r', 3: 'total,10,r', 4: 'total_ltc,10,r', 5: 'max_ltc,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "host_summary_by_file_io_type") == 'ON' and sys_schema_exist:
+        title = "host_summary_by_file_io_type"
+        #•host 主机 event_name IO事件名称 total 该主机发生的事件 total_latency 该主机发生IO事件总延迟时间 max_latency 该主机IO事件中最大的延迟时间
+        query = """SELECT host,event_name,total,total_latency,max_latency
+                    FROM sys.host_summary_by_file_io_type"""
+        style = {1: 'host,15,l', 2: 'event_name,40,r', 3: 'total,10,r', 4: 'total_ltc,10,r', 5: 'max_ltc,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
     conn.close()
 
     if save_as == "txt":
