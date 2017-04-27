@@ -827,7 +827,7 @@ if __name__=="__main__":
         #•host 主机 event_name IO事件名称 total 该主机发生的事件 total_latency 该主机发生IO事件总延迟时间 max_latency 该主机IO事件中最大的延迟时间
         query = """SELECT host,event_name,total,total_latency,max_latency
                     FROM sys.host_summary_by_file_io_type"""
-        style = {1: 'host,15,l', 2: 'event_name,40,r', 3: 'total,10,r', 4: 'total_ltc,10,r', 5: 'max_ltc,10,r'}
+        style = {1: 'host,15,l', 2: 'event_name,40,l', 3: 'total,10,r', 4: 'total_ltc,10,r', 5: 'max_ltc,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
     if config.get("option", "host_summary_by_file_io") == 'ON' and sys_schema_exist:
@@ -837,6 +837,80 @@ if __name__=="__main__":
                     FROM sys.host_summary_by_file_io"""
         style = {1: 'host,15,l', 2: 'ios,10,r', 3: 'io_latency,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "host_summary_by_stages") == 'ON' and sys_schema_exist:
+        title = "host_summary_by_stages"
+        #•host 主机  event_name stage event名称 total stage event发生的总数 total_latency stage event总的延迟时间 avg_latency stage event平均延迟时间
+        query = """SELECT host,event_name,total,total_latency,avg_latency
+                    FROM sys.host_summary_by_stages"""
+        style = {1: 'host,15,l', 2: 'event_name,52,l', 3: 'total,10,r', 4: 'total_latency,13,r', 5: 'avg_latency,12,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "host_summary_by_statement_latency") == 'ON' and sys_schema_exist:
+        title = "host_summary_by_statement_latency"
+        #host 主机  total 这个主机的语句总数  total_latency 这个主机总的延迟时间 max_latency 主机最大的延迟时间 lock_latency 等待锁的锁延迟时间
+        #rows_sent 该主机通过语句返回的总行数 rows_examined 在存储引擎上通过语句返回的行数 rows_affected 该主机通过语句影响的总行数 full_scans 全表扫描的语句总数
+        query = """SELECT host,total,total_latency,max_latency,lock_latency,rows_sent,rows_examined,rows_affected,full_scans
+                    FROM sys.host_summary_by_statement_latency"""
+        style = {1: 'host,15,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'max_latency,12,r', 5: 'lock_latency,12,r',
+                 6: 'rows_sent,10,r', 7: 'rows_examined,13,r', 8: 'rows_affected,13,r',9: 'full_scans,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "host_summary_by_statement_type") == 'ON' and sys_schema_exist:
+        title = "host_summary_by_statement_type"
+        #host 主机  statement 最后的语句事件名称 total sql语句总数 total_latency sql语句总延迟数 max_latency 最大的sql语句延迟数
+        # lock_latency 锁延迟总数 rows_sent 语句返回的行总数 rows_examined 通过存储引擎的sql语句的读取的总行数 rows_affected 语句影响的总行数 full_scans 全表扫描的语句事件总数
+        query = """SELECT host,statement,total,total_latency,max_latency,lock_latency,rows_sent,rows_examined,rows_affected,full_scans
+                    FROM sys.host_summary_by_statement_type"""
+        style = {1: 'host,15,l', 2: 'statement,21,l', 3: 'total,10,r', 4: 'total_latency,13,r', 5: 'max_latency,12,r',
+                 6: 'lock_latency,12,r', 7: 'rows_sent,10,r', 8: 'rows_examined,13,r',9: 'rows_affected,13,r',10: 'full_scans,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "innodb_buffer_stats_by_schema") == 'ON' and sys_schema_exist:
+        title = "innodb_buffer_stats_by_schema"
+        #object_schema 数据库名称 allocated 分配给当前数据库的总的字节数 data 分配给当前数据库的数据字节数 pages 分配给当前数据库的总页数
+        # pages_hashed 分配给当前数据库的hash页数 pages_old 分配给当前数据库的旧页数  rows_cached 当前数据库缓存的行数
+        query = """SELECT object_schema,allocated,data,pages,pages_hashed,pages_old,rows_cached
+                    FROM sys.innodb_buffer_stats_by_schema"""
+        style = {1: 'object_schema,30,l', 2: 'allocated,10,r', 3: 'data,10,r', 4: 'pages,10,r', 5: 'pages_hashed,12,r',
+                 6: 'pages_old,10,r', 7: 'rows_cached,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "innodb_buffer_stats_by_table") == 'ON' and sys_schema_exist:
+        title = "innodb_buffer_stats_by_table"
+        # object_schema 数据库名称 object_name 表名称 allocated 分配给表的总字节数 data 分配该表的数据字节数 pages 分配给表的页数
+        #  pages_hashed 分配给表的hash页数 pages_old 分配给表的旧页数 rows_cached 表的行缓存数
+        query = """SELECT object_schema,object_name,allocated,data,pages,pages_hashed,pages_old,rows_cached
+                    FROM sys.innodb_buffer_stats_by_table"""
+        style = {1: 'object_schema,30,l', 2: 'object_name,30,l', 3: 'allocated,10,r', 4: 'data,10,r', 5: 'pages,10,r',
+                 6: 'pages_hashed,12,r', 7: 'pages_old,10,r', 8: 'rows_cached,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "innodb_lock_waits") == 'ON' and sys_schema_exist:
+        title = "innodb_lock_waits"
+        #wait_started 锁等待发生的时间 wait_age 锁已经等待了多长时间 wait_age_secs 以秒为单位显示锁已经等待的时间
+        #locked_table 被锁的表 locked_index 被锁住的索引 locked_type 锁类型 waiting_trx_id 正在等待的事务ID waiting_trx_started 等待事务开始的时间
+        #waiting_trx_age 已经等待事务多长时间 waiting_trx_rows_locked 正在等待的事务被锁的行数量 waiting_trx_rows_modified 正在等待行重定义的数量
+        #waiting_pid 正在等待事务的线程id waiting_query 正在等待锁的查询 waiting_lock_id 正在等待锁的ID waiting_lock_mode 等待锁的模式
+        #blocking_trx_id 阻塞等待锁的事务id blocking_pid 正在锁的线程id blocking_query 正在锁的查询 blocking_lock_id 正在阻塞等待锁的锁id.
+        #blocking_lock_mode 阻塞锁模式 blocking_trx_started 阻塞事务开始的时间 blocking_trx_age 阻塞的事务已经执行的时间 blocking_trx_rows_locked 阻塞事务锁住的行的数量
+        # blocking_trx_rows_modified 阻塞事务重定义行的数量 sql_kill_blocking_query kill 语句杀死正在运行的阻塞事务 sql_kill_blocking_connection kill 语句杀死会话中正在运行的阻塞事务
+        query = """SELECT wait_started,wait_age,locked_table,locked_index,locked_type,waiting_query,waiting_lock_mode,blocking_query,blocking_lock_mode
+                    FROM sys.innodb_lock_waits"""
+        style = {1: 'wait_start,10,l', 2: 'wait_age,8,r', 3: 'locked_table,20,r', 4: 'locked_index,20,l', 5: 'locked_type,11,l',
+                 6: 'waiting_query,40,l', 7: 'wt_lk_md,10,l', 8: 'blocking_query,40,l',9: 'bk_lk_md,10,l'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "io_by_thread_by_latency") == 'ON' and sys_schema_exist:
+        title = "io_by_thread_by_latency"
+        #user 对于当前线程来说，这个值是线程被分配的账户，对于后台线程来讲，就是线程的名称 total IO事件的总数 total_latency IO事件的总延迟
+        # min_latency 单个最小的IO事件延迟 avg_latency 平均IO延迟 max_latency 最大IO延迟 thread_id 线程ID processlist_id 对于当前线程就是此时的ID，对于后台就是null
+        query = """SELECT user,total,total_latency,min_latency,avg_latency,max_latency,thread_id,processlist_id
+                    FROM sys.io_by_thread_by_latency"""
+        style = {1: 'user,30,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'min_latency,11,r', 5: 'avg_latency,11,r',
+                 6: 'max_latency,11,r', 7: 'thread_id,10,r', 8: 'processlist_id,15,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
     conn.close()
 
     if save_as == "txt":
