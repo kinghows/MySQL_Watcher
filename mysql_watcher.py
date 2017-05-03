@@ -803,6 +803,43 @@ if __name__=="__main__":
                  5: 'collation,10,r', 6: 'cardinality,11,r', 7: 'nullable,10,r', 8: 'index_type,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
+    if config.get("option", "schema_index_statistics") == 'ON' and sys_schema_exist:
+        title = "schema_index_statistics"
+        query = """SELECT table_name,index_name ,rows_selected,select_latency,rows_inserted,insert_latency,rows_updated,
+                    update_latency,rows_deleted,delete_latency
+                    FROM sys.schema_index_statistics where table_schema='""" +  dbinfo[3] + "' ORDER BY table_name"
+        style = {1: 'table_name,30,l', 2: 'index_name,40,l', 3: 'rows_selected,13,r', 4: 'select_latency,14,r',5: 'rows_inserted,13,r',
+                 6: 'insert_latency,14,r', 7: 'rows_updated,12,r', 8: 'update_latency,14,r', 9: 'rows_deleted,12,r',10: 'delete_latency,14,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "schema_table_statistics") == 'ON' and sys_schema_exist:
+        title = "schema_table_statistics"
+        query = """SELECT table_name,total_latency ,rows_fetched,fetch_latency,rows_inserted,insert_latency,rows_updated,
+                    update_latency,rows_deleted,delete_latency,io_read_requests,io_read,io_read_latency,io_write_requests,
+                    io_write,io_write_latency,io_misc_requests,io_misc_latency
+                    FROM sys.schema_table_statistics  where table_schema='""" +  dbinfo[3] + "' ORDER BY table_name"
+        style = {1: 'table_name,30,l', 2: 'tal_ltc,9,l', 3: 'rw_ftc,6,r', 4: 'ftc_ltc,9,r',
+                 5: 'rw_ins,6,r', 6: 'ins_ltc,7,r', 7: 'rw_upd,6,r', 8: 'upd_ltc,7,r',
+                 9: 'rw_del,6,r', 10: 'del_ltc,7,r', 11: 'io_rd_rq,8,r', 12: 'io_read,11,r',
+                 13: 'io_rd_ltc,9,r', 14: 'io_wt_rq,8,r', 15: 'io_write,8,r',16: 'io_wt_ltc,9,r',
+                 17: 'io_ms_rq,8,r',18: 'io_ms_ltc,9,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "schema_table_statistics_with_buffer") == 'ON' and sys_schema_exist:
+        title = "schema_table_statistics_with_buffer"
+        query = """SELECT table_name,innodb_buffer_allocated,innodb_buffer_data,innodb_buffer_free,innodb_buffer_pages,
+                    innodb_buffer_pages_hashed,innodb_buffer_pages_old,innodb_buffer_rows_cached
+                    FROM sys.schema_table_statistics_with_buffer where table_schema='""" + dbinfo[3] + "' ORDER BY table_name"
+    style = {1: 'table_name,30,l', 2: 'indb_buf_alc,12,l', 3: 'indb_buf_data,13,r', 4: 'indb_buf_free,13,r', 5: 'indb_buf_page,13,r',
+             6: 'indb_buf_page_hash,18,r', 7: 'indb_buf_page_old,17,r', 8: 'indb_buf_rw_cach,17,r'}
+    f_print_query_table(conn, title, query, style, save_as)
+
+    if config.get("option", "schema_tables_with_full_table_scans") == 'ON' and sys_schema_exist:
+        title = "schema_tables_with_full_table_scans"
+        query = "SELECT object_schema,object_name,rows_full_scanned,latency FROM sys.schema_tables_with_full_table_scans"
+        style = {1: 'object_schema,30,l', 2: 'object_name,40,l', 3: 'rows_full_scanned,17,r', 4: 'latency,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
     if config.get("option", "schema_unused_indexes") == 'ON' and sys_schema_exist:
         title = "Schema Unused Indexes"
         query = "SELECT object_schema,object_name,index_name FROM sys.schema_unused_indexes where object_schema='" +  dbinfo[3] + "'"
@@ -866,6 +903,63 @@ if __name__=="__main__":
                  6: 'lock_latency,12,r', 7: 'rows_sent,10,r', 8: 'rows_examined,13,r',9: 'rows_affected,13,r',10: 'full_scans,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
+    if config.get("option", "user_summary") == 'ON' and sys_schema_exist:
+        title = "user_summary"
+        # statements 当前用户执行的语句总数 statement_latency 语句等待时间（延迟时间） statement_avg_latency 执行语句平均延迟时间 table_scans 表扫描次数
+        #file_ios io时间总数 file_io_latency 文件io延迟 current_connections 当前连接数 total_connections 总链接数 unique_users 该用户的唯一主机数 current_memory 当前账户分配的内存
+        #total_memory_allocated 该主机分配的内存总数
+        query = """SELECT user,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
+                    total_connections,unique_hosts,current_memory,total_memory_allocated
+                    FROM sys.user_summary"""
+        style = {1: 'user,15,l', 2: 'statements,10,r', 3: 'st_ltc,10,r', 4: 'st_avg_ltc,10,r', 5: 'table_scan,10,r',
+                 6: 'file_ios,10,r', 7: 'f_io_ltc,10,r', 8: 'cur_conns,10,r', 9: 'total_conn,10,r',
+                 10: 'unq_hosts,10,r', 11: 'cur_mem,10,r', 12: 'tal_mem_alc,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "user_summary_by_file_io_type") == 'ON' and sys_schema_exist:
+        title = "user_summary_by_file_io_type"
+        #event_name IO事件名称 total 该用户发生的事件 total_latency 该用户发生IO事件总延迟时间 max_latency 该用户IO事件中最大的延迟时间
+        query = """SELECT user,event_name,total,latency,max_latency
+                    FROM sys.user_summary_by_file_io_type"""
+        style = {1: 'user,15,l', 2: 'event_name,40,l', 3: 'total,10,r', 4: 'latency,10,r', 5: 'max_ltc,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "user_summary_by_file_io") == 'ON' and sys_schema_exist:
+        title = "user_summary_by_file_io_type"
+        # ios IO事件总数 io_latency IO总的延迟时间
+        query = """SELECT user,ios,io_latency
+                    FROM sys.user_summary_by_file_io"""
+        style = {1: 'user,15,l', 2: 'ios,10,r', 3: 'io_latency,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "user_summary_by_stages") == 'ON' and sys_schema_exist:
+        title = "user_summary_by_stages"
+        #  event_name stage event名称 total stage event发生的总数 total_latency stage event总的延迟时间 avg_latency stage event平均延迟时间
+        query = """SELECT user,event_name,total,total_latency,avg_latency
+                    FROM sys.user_summary_by_stages"""
+        style = {1: 'user,15,l', 2: 'event_name,52,l', 3: 'total,10,r', 4: 'total_latency,13,r', 5: 'avg_latency,12,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "user_summary_by_statement_latency") == 'ON' and sys_schema_exist:
+        title = "user_summary_by_statement_latency"
+        #  total 这个主机的语句总数  total_latency 这个主机总的延迟时间 max_latency 主机最大的延迟时间 lock_latency 等待锁的锁延迟时间
+        #rows_sent 该主机通过语句返回的总行数 rows_examined 在存储引擎上通过语句返回的行数 rows_affected 该主机通过语句影响的总行数 full_scans 全表扫描的语句总数
+        query = """SELECT user,total,total_latency,max_latency,lock_latency,rows_sent,rows_examined,rows_affected,full_scans
+                    FROM sys.user_summary_by_statement_latency"""
+        style = {1: 'user,15,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'max_latency,12,r', 5: 'lock_latency,12,r',
+                 6: 'rows_sent,10,r', 7: 'rows_examined,13,r', 8: 'rows_affected,13,r',9: 'full_scans,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "user_summary_by_statement_type") == 'ON' and sys_schema_exist:
+        title = "user_summary_by_statement_type"
+        #statement 最后的语句事件名称 total sql语句总数 total_latency sql语句总延迟数 max_latency 最大的sql语句延迟数
+        # lock_latency 锁延迟总数 rows_sent 语句返回的行总数 rows_examined 通过存储引擎的sql语句的读取的总行数 rows_affected 语句影响的总行数 full_scans 全表扫描的语句事件总数
+        query = """SELECT user,statement,total,total_latency,max_latency,lock_latency,rows_sent,rows_examined,rows_affected,full_scans
+                    FROM sys.user_summary_by_statement_type"""
+        style = {1: 'user,15,l', 2: 'statement,21,l', 3: 'total,10,r', 4: 'total_latency,13,r', 5: 'max_latency,12,r',
+                 6: 'lock_latency,12,r', 7: 'rows_sent,10,r', 8: 'rows_examined,13,r',9: 'rows_affected,13,r',10: 'full_scans,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
     if config.get("option", "innodb_buffer_stats_by_schema") == 'ON' and sys_schema_exist:
         title = "innodb_buffer_stats_by_schema"
         #object_schema 数据库名称 allocated 分配给当前数据库的总的字节数 data 分配给当前数据库的数据字节数 pages 分配给当前数据库的总页数
@@ -910,6 +1004,78 @@ if __name__=="__main__":
         style = {1: 'user,30,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'min_latency,11,r', 5: 'avg_latency,11,r',
                  6: 'max_latency,11,r', 7: 'thread_id,10,r', 8: 'processlist_id,15,r'}
         f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "io_global_by_file_by_bytes") == 'ON' and sys_schema_exist:
+        title = "io_global_by_file_by_bytes"
+        query = """SELECT file,count_read,total_read,avg_read,count_write,total_written,avg_write,total,write_pct
+                    FROM sys.io_global_by_file_by_bytes"""
+        style = {1: 'file,60,l', 2: 'count_read,10,r', 3: 'total_read,10,r', 4: 'avg_read,11,r', 5: 'count_write,11,r',
+                 6: 'total_written,13,r', 7: 'avg_write,10,r', 8: 'total,10,r', 9: 'write_pct,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "io_global_by_file_by_latency") == 'ON' and sys_schema_exist:
+        title = "io_global_by_file_by_latency"
+        query = """SELECT file,total,total_latency,count_read,read_latency,count_write,write_latency,count_misc,misc_latency
+                    FROM sys.io_global_by_file_by_latency"""
+        style = {1: 'file,60,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'count_read,10,r', 5: 'read_latency,12,r',
+                 6: 'count_write,11,r', 7: 'write_latency,13,r', 8: 'count_misc,10,r', 9: 'misc_latency,12,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "io_global_by_wait_by_bytes") == 'ON' and sys_schema_exist:
+        title = "io_global_by_wait_by_bytes"
+        query = """SELECT event_name,total,total_latency,min_latency,avg_latency,max_latency,count_read,total_read,avg_read,count_write,
+                    total_written,avg_written,total_requested
+                    FROM sys.io_global_by_wait_by_bytes"""
+        style = {1: 'event_name,25,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'min_latency,11,r', 5: 'avg_latency,11,r',
+                 6: 'max_latency,11,r', 7: 'count_read,11,r', 8: 'total_read,10,r', 9: 'avg_read,12,r', 10: 'count_write,11,r',
+                 11: 'total_written,13,r', 12: 'avg_written,11,r', 13: 'total_requested,15,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "io_global_by_wait_by_latency") == 'ON' and sys_schema_exist:
+        title = "io_global_by_wait_by_latency"
+        query = """SELECT event_name,total,total_latency,avg_latency,max_latency,read_latency,write_latency,misc_latency,count_read,
+                    total_read,avg_read,count_write,total_written,avg_written
+                    FROM sys.io_global_by_wait_by_latency"""
+        style = {1: 'event_name,25,l', 2: 'total,10,r', 3: 'total_latency,13,r', 4: 'avg_latency,11,r', 5: 'max_latency,11,r',
+                 6: 'read_latency,12,r', 7: 'write_latency,13,r', 8: 'misc_latency,12,r', 9: 'count_read,10,r', 10: 'total_read,13,r',
+                 11: 'avg_read,10,r', 12: 'count_write,11,r', 13: 'total_written,14,r', 14: 'avg_written,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "wait_classes_global_by_avg_latency") == 'ON' and sys_schema_exist:
+        title = "wait_classes_global_by_avg_latency"
+        query = """SELECT event_class,total,total_latency,min_latency,avg_latency,max_latency
+                    FROM sys.wait_classes_global_by_avg_latency"""
+        style = {1: 'event_class,15,l', 2: 'total,10,r', 3: 'total_latency,13,r',4: 'min_latency,11,r', 5: 'avg_latency,11,r', 6: 'max_latency,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "wait_classes_global_by_latency") == 'ON' and sys_schema_exist:
+        title = "wait_classes_global_by_latency"
+        query = """SELECT event_class,total,total_latency,min_latency,avg_latency,max_latency
+                    FROM sys.wait_classes_global_by_latency"""
+        style = {1: 'event_class,15,l', 2: 'total,10,r', 3: 'total_latency,13,r',4: 'min_latency,11,r', 5: 'avg_latency,11,r', 6: 'max_latency,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "waits_by_host_by_latency") == 'ON' and sys_schema_exist:
+        title = "waits_by_host_by_latency"
+        query = """SELECT HOST,EVENT,total,total_latency,avg_latency,max_latency
+                    FROM sys.waits_by_host_by_latency """
+        style = {1: 'host,15,l',2: 'event,40,l', 3: 'total,10,r', 4: 'total_latency,13,r',5: 'avg_latency,11,r', 6: 'max_latency,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "waits_by_user_by_latency") == 'ON' and sys_schema_exist:
+        title = "waits_by_user_by_latency"
+        query = """SELECT USER,EVENT,total,total_latency,avg_latency,max_latency
+                    FROM sys.waits_by_user_by_latency """
+        style = {1: 'user,15,l',2: 'event,40,l', 3: 'total,10,r', 4: 'total_latency,13,r',5: 'avg_latency,11,r', 6: 'max_latency,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "waits_global_by_latency") == 'ON' and sys_schema_exist:
+        title = "waits_global_by_latency"
+        query = """SELECT EVENTS,total,total_latency,avg_latency,max_latency
+                    FROM sys.waits_global_by_latency """
+        style = {1: 'event,40,l', 2: 'total,10,r', 3: 'total_latency,13,r',4: 'avg_latency,11,r', 5: 'max_latency,11,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
 
     conn.close()
 
