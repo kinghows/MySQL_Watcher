@@ -750,7 +750,7 @@ if __name__=="__main__":
         style = {1: 'QUERY,65,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'ERRORS,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "query_analysis_top10" ) == 'ON':
+    if config.get ( "option", "query_analysis_top10" ) == 'ON' and sys_schema_exist:
         title = "query analysis top10"
         query = """SELECT QUERY,full_scan,exec_count,total_latency,lock_latency,rows_sent_avg,rows_examined_avg,
                  tmp_tables,tmp_disk_tables,rows_sorted,last_seen
@@ -1127,8 +1127,63 @@ if __name__=="__main__":
                  6: 'waiting_query,40,l', 7: 'wt_lk_md,10,l', 8: 'blocking_query,40,l',9: 'bk_lk_md,10,l'}
         f_print_query_table(conn, title, query, style,save_as)
 
+    if config.get("option", "memory_by_host_by_current_bytes") == 'ON' and sys_schema_exist:
+        title = "memory_by_host_by_current_bytes"
+        query = """SELECT HOST,current_count_used,current_allocated,current_avg_alloc,current_max_alloc,total_allocated
+                    FROM sys.memory_by_host_by_current_bytes"""
+        style = {1: 'HOST,15,l', 2: 'crt_count_used,15,r', 3: 'crt_allocatedc,15,r',4: 'crt_avg_alloc,15,r', 5: 'crt_max_alloc,15,r',6: 'tal_alloc,15,r'}
+        f_print_query_table(conn, title, query, style,save_as)
 
+    if config.get("option", "memory_by_thread_by_current_bytes") == 'ON' and sys_schema_exist:
+        title = "memory_by_thread_by_current_bytes"
+        query = """SELECT thread_id,USER,current_count_used,current_allocated,current_avg_alloc,current_max_alloc,total_allocated
+                    FROM sys.memory_by_thread_by_current_bytes ORDER BY thread_id"""
+        style = {1: 'thread_id,9,r', 2: 'USER,31,l', 3: 'crt_count_used,15,r', 4: 'crt_allocatedc,15,r',5: 'crt_avg_alloc,15,r', 6: 'crt_max_alloc,15,r',7: 'tal_alloc,15,r'}
+        f_print_query_table(conn, title, query, style,save_as)
 
+    if config.get("option", "memory_by_user_by_current_bytes") == 'ON' and sys_schema_exist:
+        title = "memory_by_user_by_current_bytes"
+        query = """SELECT USER,current_count_used,current_allocated,current_avg_alloc,current_max_alloc,total_allocated
+                    FROM sys.memory_by_user_by_current_bytes"""
+        style = {1: 'USER,20,l', 2: 'crt_count_used,15,r', 3: 'crt_alloc,15,r',4: 'crt_avg_alloc,15,r', 5: 'crt_max_alloc,15,r',6: 'tal_alloc,15,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "memory_global_by_current_bytes") == 'ON' and sys_schema_exist:
+        title = "memory_global_by_current_bytes"
+        query = """SELECT event_name,current_count,current_alloc,current_avg_alloc,high_count,high_alloc,high_avg_alloc
+                    FROM sys.memory_global_by_current_bytes ORDER BY current_alloc DESC"""
+        style = {1: 'event_name,80,l', 2: 'crt_count,9,r', 3: 'crt_alloc,12,r',4: 'crt_avg_alloc,15,r', 5: 'high_count,10,r',6: 'high_alloc,10,r',7: 'high_avg_alloc,15,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "memory_global_total") == 'ON' and sys_schema_exist:
+        title = "memory_global_total"
+        query = """SELECT total_allocated FROM sys.memory_global_total"""
+        style = {1: 'total_allocated,80,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "processlist" ) == 'ON' and sys_schema_exist:
+        title = "processlist"
+        query = """SELECT thd_id,USER,command,TIME,current_statement,statement_latency,full_scan,last_statement,last_statement_latency
+                    FROM sys.processlist
+                    where db='""" + dbinfo[3] + "'"
+        style = {1: 'thd_id,6,r', 2: 'USER,20,l', 3: 'command,7,r', 4:'TIME,6,r', 5: 'current_sql,50,r',6: 'sql_ltc,7,r',
+                 7: 'fscan,5,r',8: 'last_sql,65,r',9: 'lsql_ltc,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "session" ) == 'ON' and sys_schema_exist:
+        title = "session"
+        query = """SELECT thd_id,USER,command,TIME,current_statement,statement_latency,lock_latency,full_scan,last_statement,last_statement_latency
+                    FROM sys.session
+                    where db='""" + dbinfo[3] + "'"
+        style = {1: 'thd_id,6,r', 2: 'USER,20,l', 3: 'command,7,r', 4:'TIME,6,r', 5: 'current_sql,50,r',6: 'sql_ltc,7,r',
+                 7: 'lock_ltc,10,r',8: 'fscan,5,r',9: 'last_sql,65,r',10: 'lsql_ltc,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "metrics" ) == 'ON' and sys_schema_exist:
+        title = "metrics"
+        query = """SELECT Variable_name,Variable_value,TYPE,Enabled FROM sys.metrics WHERE Variable_name<>'rsa_public_key' and Enabled='YES'"""
+        style = {1: 'Variable_name,45,l', 2: 'Variable_value,50,r', 3: 'TYPE,36,l', 4:'Enabled,7,r'}
+        f_print_query_table(conn, title, query, style,save_as)
 
     conn.close()
 
