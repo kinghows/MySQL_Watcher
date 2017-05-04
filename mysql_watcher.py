@@ -732,7 +732,7 @@ if __name__=="__main__":
     if config.get ( "option", "slow_query_top10" ) == 'ON' and sys_schema_exist:
         title = "Slow Query Top10"
         query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT 10"
-        style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'total_latency,13,r', 5: 'max_latency,11,r', 6: 'avg_latency,11,r'}
+        style = {1: 'QUERY,65,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'total_latency,13,r', 5: 'max_latency,11,r', 6: 'avg_latency,11,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "err_sql_count" ) == 'ON' and ("5.7" in mysql_version):
@@ -747,7 +747,45 @@ if __name__=="__main__":
     if config.get ( "option", "err_sql_top10" ) == 'ON' and sys_schema_exist:
         title = "Err SQL Top10"
         query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT 10"
-        style = {1: 'QUERY,70,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'ERRORS,10,r'}
+        style = {1: 'QUERY,65,l', 2: 'db,15,r', 3: 'exec_count,10,r', 4: 'ERRORS,10,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "query_analysis_top10" ) == 'ON':
+        title = "query analysis top10"
+        query = """SELECT QUERY,full_scan,exec_count,total_latency,lock_latency,rows_sent_avg,rows_examined_avg,
+                 tmp_tables,tmp_disk_tables,rows_sorted,last_seen
+                   FROM sys.statement_analysis
+                   where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT 10"
+        style = {1: 'QUERY,65,l', 2: 'fscan,5,l', 3: 'ex_cot,6,l', 4: 'total_ltc,11,r', 5:'lock_ltc,11,r', 6: 'rw_st_avg,9,r',
+                 7: 'rw_exm_avg,9,r',8: 'tmp_table,9,r',9: 'tp_dk_tab,9,r',10: 'rows_sort,9,r',11: 'last_seen,19,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "query_full_table_scans_top10" ) == 'ON' and sys_schema_exist:
+        title = "query full table scans top10"
+        query = """SELECT QUERY,exec_count,total_latency,no_index_used_count,no_good_index_used_count,no_index_used_pct,rows_sent_avg,rows_examined_avg,last_seen
+                    FROM sys.statements_with_full_table_scans
+                    where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT 10"
+        style = {1: 'QUERY,65,l', 2: 'ex_cot,6,l', 3: 'total_ltc,11,r', 4:'no_idx_use,10,r', 5: 'n_g_idx_use,11,r',6: 'n_i_u_pct,9,r',
+                 7: 'rw_st_avg,9,r',8: 'rw_exm_avg,9,r',9: 'last_seen,19,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "query_sorting_top10" ) == 'ON' and sys_schema_exist:
+        title = "query sorting top10"
+        query = """SELECT QUERY,exec_count,total_latency,sort_merge_passes,avg_sort_merges,sorts_using_scans,sort_using_range,
+                    rows_sorted,avg_rows_sorted,last_seen
+                    FROM sys.statements_with_sorting
+                    where db='""" + dbinfo[3] + "' ORDER BY avg_rows_sorted DESC  LIMIT 10"
+        style = {1: 'QUERY,65,l', 2: 'ex_cot,6,l', 3: 'total_ltc,11,r', 4:'st_mg_ps,10,r', 5: 'avg_st_mg,10,r',6: 'st_us_scan,10,r',
+                 7: 'st_us_rag,10,r',8: 'rows_sort,9,r',9: 'avg_rw_st,9,r',10: 'last_seen,19,r'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get ( "option", "query_with_temp_tables_top10" ) == 'ON' and sys_schema_exist:
+        title = "query with temp tables top10"
+        query = """SELECT QUERY,exec_count,total_latency,memory_tmp_tables,disk_tmp_tables,avg_tmp_tables_per_query,tmp_tables_to_disk_pct,last_seen
+                    FROM sys.statements_with_temp_tables
+                    where db='""" + dbinfo[3] + "' ORDER BY avg_tmp_tables_per_query DESC  LIMIT 10"
+        style = {1: 'QUERY,65,l', 2: 'ex_cot,6,l', 3: 'total_ltc,11,r', 4:'mem_tmp_tab,11,r', 5: 'dsk_tmp_tab,11,r',6: 'avg_tt_per_qry,14,r',
+                 7: 'tt_to_dk_pct,12,r',8:'last_seen,19,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "database_size" ) == 'ON':
@@ -836,7 +874,8 @@ if __name__=="__main__":
 
     if config.get("option", "schema_tables_with_full_table_scans") == 'ON' and sys_schema_exist:
         title = "schema_tables_with_full_table_scans"
-        query = "SELECT object_schema,object_name,rows_full_scanned,latency FROM sys.schema_tables_with_full_table_scans"
+        query = """SELECT object_schema,object_name,rows_full_scanned,latency FROM sys.schema_tables_with_full_table_scans
+                    where object_schema='""" + dbinfo[3] + "' ORDER BY object_name"
         style = {1: 'object_schema,30,l', 2: 'object_name,40,l', 3: 'rows_full_scanned,17,r', 4: 'latency,10,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
@@ -980,21 +1019,6 @@ if __name__=="__main__":
                  6: 'pages_hashed,12,r', 7: 'pages_old,10,r', 8: 'rows_cached,11,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "innodb_lock_waits") == 'ON' and sys_schema_exist:
-        title = "innodb_lock_waits"
-        #wait_started 锁等待发生的时间 wait_age 锁已经等待了多长时间 wait_age_secs 以秒为单位显示锁已经等待的时间
-        #locked_table 被锁的表 locked_index 被锁住的索引 locked_type 锁类型 waiting_trx_id 正在等待的事务ID waiting_trx_started 等待事务开始的时间
-        #waiting_trx_age 已经等待事务多长时间 waiting_trx_rows_locked 正在等待的事务被锁的行数量 waiting_trx_rows_modified 正在等待行重定义的数量
-        #waiting_pid 正在等待事务的线程id waiting_query 正在等待锁的查询 waiting_lock_id 正在等待锁的ID waiting_lock_mode 等待锁的模式
-        #blocking_trx_id 阻塞等待锁的事务id blocking_pid 正在锁的线程id blocking_query 正在锁的查询 blocking_lock_id 正在阻塞等待锁的锁id.
-        #blocking_lock_mode 阻塞锁模式 blocking_trx_started 阻塞事务开始的时间 blocking_trx_age 阻塞的事务已经执行的时间 blocking_trx_rows_locked 阻塞事务锁住的行的数量
-        # blocking_trx_rows_modified 阻塞事务重定义行的数量 sql_kill_blocking_query kill 语句杀死正在运行的阻塞事务 sql_kill_blocking_connection kill 语句杀死会话中正在运行的阻塞事务
-        query = """SELECT wait_started,wait_age,locked_table,locked_index,locked_type,waiting_query,waiting_lock_mode,blocking_query,blocking_lock_mode
-                    FROM sys.innodb_lock_waits"""
-        style = {1: 'wait_start,10,l', 2: 'wait_age,8,r', 3: 'locked_table,20,r', 4: 'locked_index,20,l', 5: 'locked_type,11,l',
-                 6: 'waiting_query,40,l', 7: 'wt_lk_md,10,l', 8: 'blocking_query,40,l',9: 'bk_lk_md,10,l'}
-        f_print_query_table(conn, title, query, style,save_as)
-
     if config.get("option", "io_by_thread_by_latency") == 'ON' and sys_schema_exist:
         title = "io_by_thread_by_latency"
         #user 对于当前线程来说，这个值是线程被分配的账户，对于后台线程来讲，就是线程的名称 total IO事件的总数 total_latency IO事件的总延迟
@@ -1075,6 +1099,35 @@ if __name__=="__main__":
                     FROM sys.waits_global_by_latency """
         style = {1: 'event,40,l', 2: 'total,10,r', 3: 'total_latency,13,r',4: 'avg_latency,11,r', 5: 'max_latency,11,r'}
         f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "schema_table_lock_waits") == 'ON' and sys_schema_exist:
+        title = "schema_table_lock_waits"
+        query = """SELECT object_schema,object_name,waiting_account,waiting_lock_type,
+                    waiting_lock_duration,waiting_query,waiting_query_secs,waiting_query_rows_affected,waiting_query_rows_examined,
+                    blocking_account,blocking_lock_type,blocking_lock_duration
+                    FROM sys.schema_table_lock_waits"""
+        #,sql_kill_blocking_query,sql_kill_blocking_connection
+        style = {1: 'object_schema,20,l', 2: 'object_name,20,r', 3: 'wait_account,12,r', 4: 'wt_lk_tp,10,l', 5: 'w_l_dur,7,l',
+                 6: 'waiting_query,40,l', 7: 'w_qry_s,7,l', 8: 'w_q_r_a,7,l',9: 'w_q_r_e,7,l',10: 'blk_account,12,l',
+                 11: 'bk_lk_tp,10,l',12: 'b_l_dur,7,l'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+    if config.get("option", "innodb_lock_waits") == 'ON' and sys_schema_exist:
+        title = "innodb_lock_waits"
+        #wait_started 锁等待发生的时间 wait_age 锁已经等待了多长时间 wait_age_secs 以秒为单位显示锁已经等待的时间
+        #locked_table 被锁的表 locked_index 被锁住的索引 locked_type 锁类型 waiting_trx_id 正在等待的事务ID waiting_trx_started 等待事务开始的时间
+        #waiting_trx_age 已经等待事务多长时间 waiting_trx_rows_locked 正在等待的事务被锁的行数量 waiting_trx_rows_modified 正在等待行重定义的数量
+        #waiting_pid 正在等待事务的线程id waiting_query 正在等待锁的查询 waiting_lock_id 正在等待锁的ID waiting_lock_mode 等待锁的模式
+        #blocking_trx_id 阻塞等待锁的事务id blocking_pid 正在锁的线程id blocking_query 正在锁的查询 blocking_lock_id 正在阻塞等待锁的锁id.
+        #blocking_lock_mode 阻塞锁模式 blocking_trx_started 阻塞事务开始的时间 blocking_trx_age 阻塞的事务已经执行的时间 blocking_trx_rows_locked 阻塞事务锁住的行的数量
+        # blocking_trx_rows_modified 阻塞事务重定义行的数量 sql_kill_blocking_query kill 语句杀死正在运行的阻塞事务 sql_kill_blocking_connection kill 语句杀死会话中正在运行的阻塞事务
+        query = """SELECT wait_started,wait_age,locked_table,locked_index,locked_type,waiting_query,waiting_lock_mode,blocking_query,blocking_lock_mode
+                    FROM sys.innodb_lock_waits"""
+        style = {1: 'wait_start,10,l', 2: 'wait_age,8,r', 3: 'locked_table,20,r', 4: 'locked_index,20,l', 5: 'locked_type,11,l',
+                 6: 'waiting_query,40,l', 7: 'wt_lk_md,10,l', 8: 'blocking_query,40,l',9: 'bk_lk_md,10,l'}
+        f_print_query_table(conn, title, query, style,save_as)
+
+
 
 
     conn.close()

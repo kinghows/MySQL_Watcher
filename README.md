@@ -7,6 +7,7 @@ Linux overview just run in linux server local,not remote ,and must install psuti
 
 The MySQL sys schema support now.
 https://github.com/mysql/mysql-sys
+Some sys view is off by default, you can set in the dbset.ini.
 
 example:
 
