@@ -648,7 +648,7 @@ def f_print_mysql_status(conn,interval,save_as):
 
 if __name__=="__main__":
     dbinfo=["127.0.0.1","root","","mysql",3306] #host,user,passwd,db,port
-    config_file=""
+    config_file="dbset.ini"
     mysql_version=""
     option = []
     save_as = "txt"
@@ -868,9 +868,9 @@ if __name__=="__main__":
         query = """SELECT table_name,innodb_buffer_allocated,innodb_buffer_data,innodb_buffer_free,innodb_buffer_pages,
                     innodb_buffer_pages_hashed,innodb_buffer_pages_old,innodb_buffer_rows_cached
                     FROM sys.schema_table_statistics_with_buffer where table_schema='""" + dbinfo[3] + "' ORDER BY table_name"
-    style = {1: 'table_name,30,l', 2: 'indb_buf_alc,12,l', 3: 'indb_buf_data,13,r', 4: 'indb_buf_free,13,r', 5: 'indb_buf_page,13,r',
-             6: 'indb_buf_page_hash,18,r', 7: 'indb_buf_page_old,17,r', 8: 'indb_buf_rw_cach,17,r'}
-    f_print_query_table(conn, title, query, style, save_as)
+        style = {1: 'table_name,30,l', 2: 'indb_buf_alc,12,l', 3: 'indb_buf_data,13,r', 4: 'indb_buf_free,13,r', 5: 'indb_buf_page,13,r',
+                 6: 'indb_buf_page_hash,18,r', 7: 'indb_buf_page_old,17,r', 8: 'indb_buf_rw_cach,17,r'}
+        f_print_query_table(conn, title, query, style, save_as)
 
     if config.get("option", "schema_tables_with_full_table_scans") == 'ON' and sys_schema_exist:
         title = "schema_tables_with_full_table_scans"
