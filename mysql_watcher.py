@@ -1215,7 +1215,3 @@ if __name__=="__main__":
 End of Report
 </body></html>
         """
-
-
-
-
