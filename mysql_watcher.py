@@ -14,6 +14,7 @@ import os
 import prettytable
 import psutil
 
+
 filterwarnings('ignore', category = MySQLdb.Warning)
 
 tab1="="
