@@ -12,6 +12,7 @@ import math
 import time
 import os
 import prettytable
+import psutil
 
 filterwarnings('ignore', category = MySQLdb.Warning)
 
@@ -367,6 +368,21 @@ def f_print_linux_status(save_as):
     elif save_as == "html":
         f_print_table_html(rows, title, style)
 
+def f_print_host_memory_topN(topN,save_as):
+    ps_result = list()
+    for proc in psutil.process_iter():
+        ps_result.append({'name': proc.name(), 'pid': proc.pid, 'cpu_percent': proc.cpu_percent(),
+                          'memory_percent': proc.memory_percent()})
+    rows = []
+    for i, item in enumerate(sorted(ps_result, key=lambda x: x['memory_percent'], reverse=True)):
+        if i >= topN:
+            break
+        rows.append([i + 1, item['name'], item['pid'], format(item['memory_percent'] / 100, '.2%')])
+
+    style = {1: 'No,r', 2: 'Name,l',3: 'Pid,r', 4: 'Memory percent,r'}
+    title = "Host memory top "+str(topN)
+    f_print_table(rows, title, style, save_as)
+
 def f_sec2dhms(sec):
     day = 24*60*60
     hour = 60*60
@@ -674,8 +690,11 @@ if __name__=="__main__":
     sys_schema_exist = f_is_sys_schema_exist(conn)
 
     if config.get("option","linux_overview")=='ON':
-        import psutil
         f_print_linux_status(save_as)
+
+    if config.get("option","host_memory_topN")<>'OFF':
+        topN=int(config.get("option","host_memory_topN"))
+        f_print_host_memory_topN(topN,save_as)
 
     if config.get("option","mysql_overview")=='ON':
         f_print_mysql_status(conn,interval,save_as)
@@ -722,9 +741,10 @@ if __name__=="__main__":
         style = {1: 'schema_name,l', 2: 'COUNT,r', 3: 'avg_microsec,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "slow_query_top10" ) == 'ON' and sys_schema_exist:
-        title = "Slow Query Top10"
-        query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT 10"
+    if config.get ( "option", "slow_query_topN" ) <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "slow_query_topN"))
+        title = "Slow Query Top "+str(topN)
+        query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'db,r', 3: 'exec_count,r', 4: 'total_latency,r', 5: 'max_latency,r', 6: 'avg_latency,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
@@ -737,46 +757,51 @@ if __name__=="__main__":
         style = {1: 'schema_name,l', 2: 'err_count,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "err_sql_top10" ) == 'ON' and sys_schema_exist:
-        title = "Err SQL Top10"
-        query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT 10"
+    if config.get ( "option", "err_sql_topN" ) <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "err_sql_topN"))
+        title = "Err SQL Top "+str(topN)
+        query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'db,r', 3: 'exec_count,r', 4: 'ERRORS,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "query_analysis_top10" ) == 'ON' and sys_schema_exist:
-        title = "query analysis top10"
+    if config.get ( "option", "query_analysis_topN" ) <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "query_analysis_topN"))
+        title = "query analysis top "+str(topN)
         query = """SELECT QUERY,full_scan,exec_count,total_latency,lock_latency,rows_sent_avg,rows_examined_avg,
                  tmp_tables,tmp_disk_tables,rows_sorted,last_seen
                    FROM sys.statement_analysis
-                   where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT 10"
+                   where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'fscan,l', 3: 'ex_cot,r', 4: 'total_ltc,r', 5:'lock_ltc,r', 6: 'rw_st_avg,r',
                  7: 'rw_exm_avg,9,r',8: 'tmp_table,9,r',9: 'tp_dk_tab,9,r',10: 'rows_sort,9,r',11: 'last_seen,19,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "query_full_table_scans_top10" ) == 'ON' and sys_schema_exist:
-        title = "query full table scans top10"
+    if config.get ( "option", "query_full_table_scans_topN" ) <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "query_full_table_scans_topN"))
+        title = "query full table scans top "+str(topN)
         query = """SELECT QUERY,exec_count,total_latency,no_index_used_count,no_good_index_used_count,no_index_used_pct,rows_sent_avg,rows_examined_avg,last_seen
                     FROM sys.statements_with_full_table_scans
-                    where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT 10"
+                    where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'ex_cot,r', 3: 'total_ltc,r', 4:'no_idx_use,r', 5: 'n_g_idx_use,r',6: 'n_i_u_pct,r',
                  7: 'rw_st_avg,r',8: 'rw_exm_avg,r',9: 'last_seen,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "query_sorting_top10" ) == 'ON' and sys_schema_exist:
-        title = "query sorting top10"
+    if config.get ( "option", "query_sorting_topN" ) <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "query_sorting_topN"))
+        title = "query sorting top "+str(topN)
         query = """SELECT QUERY,exec_count,total_latency,sort_merge_passes,avg_sort_merges,sorts_using_scans,sort_using_range,
                     rows_sorted,avg_rows_sorted,last_seen
                     FROM sys.statements_with_sorting
-                    where db='""" + dbinfo[3] + "' ORDER BY avg_rows_sorted DESC  LIMIT 10"
+                    where db='""" + dbinfo[3] + "' ORDER BY avg_rows_sorted DESC  LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'ex_cot,r', 3: 'total_ltc,r', 4:'st_mg_ps,r', 5: 'avg_st_mg,r',6: 'st_us_scan,r',
                  7: 'st_us_rag,r',8: 'rows_sort,r',9: 'avg_rw_st,r',10: 'last_seen,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "query_with_temp_tables_top10" ) == 'ON' and sys_schema_exist:
-        title = "query with temp tables top10"
+    if config.get ( "option", "query_with_temp_tables_topN" ) <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "query_with_temp_tables_topN"))
+        title = "query with temp tables top "+str(topN)
         query = """SELECT QUERY,exec_count,total_latency,memory_tmp_tables,disk_tmp_tables,avg_tmp_tables_per_query,tmp_tables_to_disk_pct,last_seen
                     FROM sys.statements_with_temp_tables
-                    where db='""" + dbinfo[3] + "' ORDER BY avg_tmp_tables_per_query DESC  LIMIT 10"
+                    where db='""" + dbinfo[3] + "' ORDER BY avg_tmp_tables_per_query DESC  LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'ex_cot,r', 3: 'total_ltc,r', 4:'mem_tmp_tab,r', 5: 'dsk_tmp_tab,r',6: 'avg_tt_per_qry,r',
                  7: 'tt_to_dk_pct,r',8:'last_seen,r'}
         f_print_query_table(conn, title, query, style,save_as)
