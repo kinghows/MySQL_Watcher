@@ -381,7 +381,7 @@ def f_print_host_memory_topN(topN,save_as):
         rows.append([i + 1, item['name'], item['pid'], format(item['memory_percent'] / 100, '.2%')])
 
     style = {1: 'No,r', 2: 'Name,l',3: 'Pid,r', 4: 'Memory percent,r'}
-    title = "Host memory top "+str(topN)
+    title = "Host memory top"+str(topN)
     f_print_table(rows, title, style, save_as)
 
 def f_sec2dhms(sec):
@@ -744,7 +744,7 @@ if __name__=="__main__":
 
     if config.get ( "option", "slow_query_topN" ) <> 'OFF' and sys_schema_exist:
         topN = int(config.get("option", "slow_query_topN"))
-        title = "Slow Query Top "+str(topN)
+        title = "Slow Query Top"+str(topN)
         query = "SELECT QUERY,db,exec_count,total_latency,max_latency,avg_latency FROM sys.statements_with_runtimes_in_95th_percentile LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'db,r', 3: 'exec_count,r', 4: 'total_latency,r', 5: 'max_latency,r', 6: 'avg_latency,r'}
         f_print_query_table(conn, title, query, style,save_as)
@@ -760,14 +760,14 @@ if __name__=="__main__":
 
     if config.get ( "option", "err_sql_topN" ) <> 'OFF' and sys_schema_exist:
         topN = int(config.get("option", "err_sql_topN"))
-        title = "Err SQL Top "+str(topN)
+        title = "Err SQL Top"+str(topN)
         query = "SELECT QUERY,db,exec_count,ERRORS FROM sys.statements_with_errors_or_warnings ORDER BY ERRORS DESC LIMIT "+str(topN)
         style = {1: 'QUERY,l', 2: 'db,r', 3: 'exec_count,r', 4: 'ERRORS,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
     if config.get ( "option", "query_analysis_topN" ) <> 'OFF' and sys_schema_exist:
         topN = int(config.get("option", "query_analysis_topN"))
-        title = "query analysis top "+str(topN)
+        title = "query analysis top"+str(topN)
         query = """SELECT QUERY,full_scan,exec_count,total_latency,lock_latency,rows_sent_avg,rows_examined_avg,
                  tmp_tables,tmp_disk_tables,rows_sorted,last_seen
                    FROM sys.statement_analysis
@@ -778,7 +778,7 @@ if __name__=="__main__":
 
     if config.get ( "option", "query_full_table_scans_topN" ) <> 'OFF' and sys_schema_exist:
         topN = int(config.get("option", "query_full_table_scans_topN"))
-        title = "query full table scans top "+str(topN)
+        title = "query full table scans top"+str(topN)
         query = """SELECT QUERY,exec_count,total_latency,no_index_used_count,no_good_index_used_count,no_index_used_pct,rows_sent_avg,rows_examined_avg,last_seen
                     FROM sys.statements_with_full_table_scans
                     where db='""" + dbinfo[3] + "' ORDER BY total_latency DESC  LIMIT "+str(topN)
@@ -788,7 +788,7 @@ if __name__=="__main__":
 
     if config.get ( "option", "query_sorting_topN" ) <> 'OFF' and sys_schema_exist:
         topN = int(config.get("option", "query_sorting_topN"))
-        title = "query sorting top "+str(topN)
+        title = "query sorting top"+str(topN)
         query = """SELECT QUERY,exec_count,total_latency,sort_merge_passes,avg_sort_merges,sorts_using_scans,sort_using_range,
                     rows_sorted,avg_rows_sorted,last_seen
                     FROM sys.statements_with_sorting
@@ -799,7 +799,7 @@ if __name__=="__main__":
 
     if config.get ( "option", "query_with_temp_tables_topN" ) <> 'OFF' and sys_schema_exist:
         topN = int(config.get("option", "query_with_temp_tables_topN"))
-        title = "query with temp tables top "+str(topN)
+        title = "query with temp tables top"+str(topN)
         query = """SELECT QUERY,exec_count,total_latency,memory_tmp_tables,disk_tmp_tables,avg_tmp_tables_per_query,tmp_tables_to_disk_pct,last_seen
                     FROM sys.statements_with_temp_tables
                     where db='""" + dbinfo[3] + "' ORDER BY avg_tmp_tables_per_query DESC  LIMIT "+str(topN)
@@ -1038,47 +1038,52 @@ if __name__=="__main__":
                  6: 'pages_hashed,r', 7: 'pages_old,r', 8: 'rows_cached,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "io_by_thread_by_latency") == 'ON' and sys_schema_exist:
-        title = "io_by_thread_by_latency"
+    if config.get("option", "io_by_thread_by_latency_topN")  <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "io_by_thread_by_latency_topN"))
+        title = "io_by_thread_by_latency top"+str(topN)
         #user 对于当前线程来说，这个值是线程被分配的账户，对于后台线程来讲，就是线程的名称 total IO事件的总数 total_latency IO事件的总延迟
         # min_latency 单个最小的IO事件延迟 avg_latency 平均IO延迟 max_latency 最大IO延迟 thread_id 线程ID processlist_id 对于当前线程就是此时的ID，对于后台就是null
         query = """SELECT user,total,total_latency,min_latency,avg_latency,max_latency,thread_id,processlist_id
-                    FROM sys.io_by_thread_by_latency"""
+                    FROM sys.io_by_thread_by_latency  LIMIT """+str(topN)
         style = {1: 'user,l', 2: 'total,r', 3: 'total_latency,r', 4: 'min_latency,r', 5: 'avg_latency,r',
                  6: 'max_latency,r', 7: 'thread_id,r', 8: 'processlist_id,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "io_global_by_file_by_bytes") == 'ON' and sys_schema_exist:
-        title = "io_global_by_file_by_bytes"
+    if config.get("option", "io_global_by_file_by_bytes_topN")  <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "io_global_by_file_by_bytes_topN"))
+        title = "io_global_by_file_by_bytes top"+str(topN)
         query = """SELECT file,count_read,total_read,avg_read,count_write,total_written,avg_write,total,write_pct
-                    FROM sys.io_global_by_file_by_bytes"""
+                    FROM sys.io_global_by_file_by_bytes  LIMIT """+str(topN)
         style = {1: 'file,l', 2: 'count_read,r', 3: 'total_read,r', 4: 'avg_read,r', 5: 'count_write,r',
                  6: 'total_written,r', 7: 'avg_write,r', 8: 'total,r', 9: 'write_pct,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "io_global_by_file_by_latency") == 'ON' and sys_schema_exist:
-        title = "io_global_by_file_by_latency"
+    if config.get("option", "io_global_by_file_by_latency_topN")  <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "io_global_by_file_by_latency_topN"))
+        title = "io_global_by_file_by_latency top"+str(topN)
         query = """SELECT file,total,total_latency,count_read,read_latency,count_write,write_latency,count_misc,misc_latency
-                    FROM sys.io_global_by_file_by_latency"""
+                    FROM sys.io_global_by_file_by_latency  LIMIT """+str(topN)
         style = {1: 'file,l', 2: 'total,r', 3: 'total_latency,r', 4: 'count_read,r', 5: 'read_latency,r',
                  6: 'count_write,r', 7: 'write_latency,r', 8: 'count_misc,r', 9: 'misc_latency,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "io_global_by_wait_by_bytes") == 'ON' and sys_schema_exist:
-        title = "io_global_by_wait_by_bytes"
+    if config.get("option", "io_global_by_wait_by_bytes_topN")  <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "io_global_by_wait_by_bytes_topN"))
+        title = "io_global_by_wait_by_bytes top"+str(topN)
         query = """SELECT event_name,total,total_latency,min_latency,avg_latency,max_latency,count_read,total_read,avg_read,count_write,
                     total_written,avg_written,total_requested
-                    FROM sys.io_global_by_wait_by_bytes"""
+                    FROM sys.io_global_by_wait_by_bytes  LIMIT """+str(topN)
         style = {1: 'event_name,l', 2: 'total,r', 3: 'total_latency,r', 4: 'min_latency,r', 5: 'avg_latency,r',
                  6: 'max_latency,r', 7: 'count_read,r', 8: 'total_read,r', 9: 'avg_read,r', 10: 'count_write,r',
                  11: 'total_written,r', 12: 'avg_written,r', 13: 'total_requested,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "io_global_by_wait_by_latency") == 'ON' and sys_schema_exist:
-        title = "io_global_by_wait_by_latency"
+    if config.get("option", "io_global_by_wait_by_latency_topN")  <> 'OFF' and sys_schema_exist:
+        topN = int(config.get("option", "io_global_by_wait_by_latency_topN"))
+        title = "io_global_by_wait_by_latency top"+str(topN)
         query = """SELECT event_name,total,total_latency,avg_latency,max_latency,read_latency,write_latency,misc_latency,count_read,
                     total_read,avg_read,count_write,total_written,avg_written
-                    FROM sys.io_global_by_wait_by_latency"""
+                    FROM sys.io_global_by_wait_by_latency  LIMIT """+str(topN)
         style = {1: 'event_name,l', 2: 'total,r', 3: 'total_latency,r', 4: 'avg_latency,r', 5: 'max_latency,r',
                  6: 'read_latency,r', 7: 'write_latency,r', 8: 'misc_latency,r', 9: 'count_read,r', 10: 'total_read,r',
                  11: 'avg_read,r', 12: 'count_write,r', 13: 'total_written,r', 14: 'avg_written,r'}
