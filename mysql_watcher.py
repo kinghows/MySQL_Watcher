@@ -1,5 +1,11 @@
 #!/usr/local/bin/python
 # coding: utf-8
+
+# MySQL Watcher V1.1.0
+# trouble shoot MySQL performance
+# Copyright (C) 2017-2017 Kinghow - Kinghow@hotmail.com
+# Git repository available at https://github.com/kinghows/MySQL_Watcher
+
 import datetime
 import getopt
 import sys
@@ -283,12 +289,13 @@ def f_print_optimizer_switch(conn,save_as,perfor_or_infor):
 def f_print_caption(dbinfo,mysql_version,save_as):
     if save_as == "txt":
         print tab2 * linesize
-        print tab2, 'MySQL Watcher  V1.0'.center(linesize - 4), tab2
+        print tab2, 'MySQL Watcher  V1.1.0'.center(linesize - 4), tab2
         print tab2, 'Kinghow@hotmail.com'.center(linesize - 4), tab2
+        print tab2, 'https://github.com/kinghows/MySQL_Watcher'.center(linesize - 4), tab2
         print tab2 * linesize
     elif save_as == "html":
         print """
-<html><head><title>MySQL Watcher  V1.0  Kinghow@hotmail.com </title>
+<html><head><title>MySQL Watcher V1.1.0 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
 <style type=\"text/css\">
 body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
 pre.awr  {font:8pt Courier;color:black; background:White;}
