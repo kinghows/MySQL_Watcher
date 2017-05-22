@@ -19,7 +19,7 @@ import time
 import os
 import prettytable
 import psutil
-
+import re
 
 filterwarnings('ignore', category = MySQLdb.Warning)
 
@@ -284,6 +284,31 @@ def f_print_optimizer_switch(conn,save_as,perfor_or_infor):
     recode = f_get_query_record(conn, query)
     for col in recode[0][0].split(','):
         rows.append([col.split('=')[0],col.split('=')[1]])
+    f_print_table(rows, title, style,save_as)
+
+def f_print_log_error(conn,perfor_or_infor,save_as):
+    title = "Log file Statistics"
+    style = {1: 'start & shutdown:,l'}
+    rows =[]
+    WarnLog = 0
+    ErrLog  = 0
+    query = "SELECT variable_value FROM " + perfor_or_infor + ".global_variables where variable_name ='log_error'"
+    filename = f_get_query_value(conn, query)
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            for line in f:
+                if ('ready for connections' in line or 'Shutdown completed' in line):
+                    rows.append([line])
+                if ('Warning' in line):
+                    WarnLog += 1
+                if ('error' in line):
+                    ErrLog += 1
+    else:
+        rows.append([filename + " not exists"])
+
+    rows.append(['Warning & Error Statistics:'])
+    rows.append([filename + ' contains ' + str(WarnLog) + ' warning(s).'])
+    rows.append([filename + ' contains ' + str(ErrLog) + ' error(s).'])
     f_print_table(rows, title, style,save_as)
 
 def f_print_caption(dbinfo,mysql_version,save_as):
@@ -723,6 +748,9 @@ if __name__=="__main__":
         style = {1: 'parameter_name,l', 2: 'value,r'}
         f_print_query_table(conn, title, query, style,save_as)
         f_print_optimizer_switch(conn,save_as,perfor_or_infor)
+
+    if config.get("option","log_error_statistics")=='ON':
+        f_print_log_error(conn,perfor_or_infor,save_as)
 
     if config.get ( "option", "replication" ) == 'ON':
         title = "Replication"
