@@ -1,17 +1,13 @@
 #!/usr/local/bin/python
 # coding: utf-8
 
-# MySQL Watcher V1.1.0
+# MySQL Watcher V1.1.2
 # trouble shoot MySQL performance
 # Copyright (C) 2017-2017 Kinghow - Kinghow@hotmail.com
 # Git repository available at https://github.com/kinghows/MySQL_Watcher
 
-import datetime
 import getopt
 import sys
-import string
-import pprint
-from warnings import filterwarnings
 import MySQLdb
 import ConfigParser
 import math
@@ -19,7 +15,12 @@ import time
 import os
 import prettytable
 import psutil
+import platform
+import glob
 import re
+from collections import OrderedDict
+from collections import namedtuple
+from warnings import filterwarnings
 
 filterwarnings('ignore', category = MySQLdb.Warning)
 
@@ -314,13 +315,13 @@ def f_print_log_error(conn,perfor_or_infor,save_as):
 def f_print_caption(dbinfo,mysql_version,save_as):
     if save_as == "txt":
         print tab2 * linesize
-        print tab2, 'MySQL Watcher  V1.1.0'.center(linesize - 4), tab2
+        print tab2, 'MySQL Watcher  V1.1.2'.center(linesize - 4), tab2
         print tab2, 'Kinghow@hotmail.com'.center(linesize - 4), tab2
         print tab2, 'https://github.com/kinghows/MySQL_Watcher'.center(linesize - 4), tab2
         print tab2 * linesize
     elif save_as == "html":
         print """
-<html><head><title>MySQL Watcher V1.1.0 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
+<html><head><title>MySQL Watcher V1.1.2 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
 <style type=\"text/css\">
 body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
 pre.awr  {font:8pt Courier;color:black; background:White;}
@@ -357,6 +358,68 @@ WORKLOAD REPOSITORY report for
     title = "Basic Information"
     style = {1: 'host,c', 2: 'user,c', 3: 'db,c', 4: 'mysql version,c'}
     rows = [[dbinfo[0], dbinfo[1], dbinfo[3], mysql_version]]
+    f_print_table(rows, title, style,save_as)
+
+def size(device):
+    nr_sectors = open(device+'/size').read().rstrip('\n')
+    sect_size = open(device+'/queue/hw_sector_size').read().rstrip('\n')
+    return (float(nr_sectors)*float(sect_size))/(1024.0*1024.0*1024.0)
+
+def f_print_linux_info(save_as):
+    title = "Linux info"
+    style = {1: 'Linux,l',2: 'Info,l'}
+    rows =[]
+    #version
+    rows.append(["Version",platform.uname()[0]+' '+platform.uname()[2]+' '+platform.uname()[4]])
+    #cpu
+    cpu_count = 0
+    with open('/proc/cpuinfo') as f:
+        for line in f:
+            if line.strip():
+                if line.rstrip('\n').startswith('model name'):
+                    model_name = line.rstrip('\n').split(':')[1]
+                    cpu_count +=1
+    rows.append(["CPU",model_name + ' X '+str(cpu_count)])
+    #mem
+    meminfo = OrderedDict()
+    with open('/proc/meminfo') as f:
+        for line in f:
+            meminfo[line.split(':')[0]] = line.split(':')[1].strip()
+    rows.append(["Memory",'Total: {0}'.format(meminfo['MemTotal'])+' Free: {0}'.format(meminfo['MemFree'])])
+    #net
+    with open('/proc/net/dev') as f:
+        net_dump = f.readlines()
+    device_data = {}
+    data = namedtuple('data', ['rx', 'tx'])
+    for line in net_dump[2:]:
+        line = line.split(':')
+        if line[0].strip() != 'lo':
+            device_data[line[0].strip()] = data(float(line[1].split()[0]) / (1024.0 * 1024.0),
+                                                float(line[1].split()[8]) / (1024.0 * 1024.0))
+    for dev in device_data.keys():
+        rows.append(["Net",'{0}: {1} MiB {2} MiB'.format(dev, device_data[dev].rx, device_data[dev].tx)])
+    #Device
+    dev_pattern = ['sd.*', 'mmcblk*']
+    for device in glob.glob('/sys/block/*'):
+        for pattern in dev_pattern:
+            if re.compile(pattern).match(os.path.basename(device)):
+                rows.append(["Device",'{0}, Size: {1} GiB'.format(device, size(device))])
+    #process
+    pids = []
+    for subdir in os.listdir('/proc'):
+        if subdir.isdigit():
+            pids.append(subdir)
+    rows.append(["Processes",'Total number of running : {0}'.format(len(pids))])
+
+    f_print_table(rows, title, style,save_as)
+
+def f_print_filesystem_info(save_as):
+    title = "Filesystem info"
+    style = {1: 'Filesystem,l',2: 'Size,r',3: 'Used,r',4: 'Avail,r',5: 'Use %,r',6: ' Mounted on,l'}
+    rows =[]
+    for line in os.popen('df -h').readlines():
+        if not line.rstrip('\n').startswith('Filesystem'):
+            rows.append([line.strip().split()[0],line.strip().split()[1],line.strip().split()[2],line.strip().split()[3],line.strip().split()[4],line.strip().split()[5]])
     f_print_table(rows, title, style,save_as)
 
 def f_print_linux_status(save_as):
@@ -721,6 +784,12 @@ if __name__=="__main__":
         perfor_or_infor = "information_schema"
         
     sys_schema_exist = f_is_sys_schema_exist(conn)
+
+    if config.get("option","linux_info")=='ON':
+        f_print_linux_info(save_as)
+
+    if config.get("option","filesystem_info")=='ON':
+        f_print_filesystem_info(save_as)
 
     if config.get("option","linux_overview")=='ON':
         f_print_linux_status(save_as)

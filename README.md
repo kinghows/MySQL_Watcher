@@ -12,7 +12,7 @@ pip install prettytable
 
 Test in Python-2.7+MySQL5.6&5.7.
 
-Linux overview just run in linux server local,not remote.
+Some options must be executed on the host,not remote.
 
 The MySQL sys schema support now.
 
@@ -27,7 +27,7 @@ example:
 
 Edit MySQL connect info in dbset.ini.
 
-run:
+execute:
 
 python mysql_watcher.py
 
