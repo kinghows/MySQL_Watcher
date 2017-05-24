@@ -360,6 +360,16 @@ WORKLOAD REPOSITORY report for
     rows = [[dbinfo[0], dbinfo[1], dbinfo[3], mysql_version]]
     f_print_table(rows, title, style,save_as)
 
+def f_print_ending(save_as):
+    if save_as == "txt":
+        f_print_title('--@--  End  --@--')
+    elif save_as == "html":
+        print """
+    <p />
+    End of Report
+    </body></html>
+             """
+
 def size(device):
     nr_sectors = open(device+'/size').read().rstrip('\n')
     sect_size = open(device+'/queue/hw_sector_size').read().rstrip('\n')
@@ -1323,12 +1333,4 @@ if __name__=="__main__":
         f_print_query_table(conn, title, query, style,save_as)
 
     conn.close()
-
-    if save_as == "txt":
-        f_print_title('--@--  End  --@--')
-    elif save_as == "html":
-        print """
-<p />
-End of Report
-</body></html>
-        """
+    f_print_ending(save_as)

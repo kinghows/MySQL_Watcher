@@ -33,9 +33,9 @@ python mysql_watcher.py
 
 python mysql_watcher.py -p dbset.ini
 
-python mysql_watcher.py -p dbset.ini -s txt >mysql_report.txt
+python mysql_watcher.py -p dbset.ini -s txt >mysql_watcher.txt
 
-python mysql_watcher.py -p dbset.ini -s html >mysql_report.html
+python mysql_watcher.py -p dbset.ini -s html >mysql_watcher.html
 
 use crontab regularly perform mysql_watcher.sh
 
