@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # coding: utf-8
 
-# MySQL Watcher V1.1.2
+# MySQL Watcher V1.1.3
 # trouble shoot MySQL performance
 # Copyright (C) 2017-2017 Kinghow - Kinghow@hotmail.com
 # Git repository available at https://github.com/kinghows/MySQL_Watcher
@@ -315,13 +315,13 @@ def f_print_log_error(conn,perfor_or_infor,save_as):
 def f_print_caption(dbinfo,mysql_version,save_as):
     if save_as == "txt":
         print tab2 * linesize
-        print tab2, 'MySQL Watcher  V1.1.2'.center(linesize - 4), tab2
+        print tab2, 'MySQL Watcher  V1.1.3'.center(linesize - 4), tab2
         print tab2, 'Kinghow@hotmail.com'.center(linesize - 4), tab2
         print tab2, 'https://github.com/kinghows/MySQL_Watcher'.center(linesize - 4), tab2
         print tab2 * linesize
     elif save_as == "html":
         print """
-<html><head><title>MySQL Watcher V1.1.2 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
+<html><head><title>MySQL Watcher V1.1.3 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
 <style type=\"text/css\">
 body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
 pre.awr  {font:8pt Courier;color:black; background:White;}
@@ -417,9 +417,16 @@ def f_print_filesystem_info(save_as):
     title = "Filesystem info"
     style = {1: 'Filesystem,l',2: 'Size,r',3: 'Used,r',4: 'Avail,r',5: 'Use %,r',6: ' Mounted on,l'}
     rows =[]
+    file_info = []
+    j = 0
     for line in os.popen('df -h').readlines():
-        if not line.rstrip('\n').startswith('Filesystem'):
-            rows.append([line.strip().split()[0],line.strip().split()[1],line.strip().split()[2],line.strip().split()[3],line.strip().split()[4],line.strip().split()[5]])
+        for eachList in line.strip().split():
+            file_info.append(eachList)
+            j +=1
+    i = 6
+    while i<j-6:
+        rows.append([file_info[i+1],file_info[i+2],file_info[i+3],file_info[i+4],file_info[i+5],file_info[i+6]])
+        i += 6
     f_print_table(rows, title, style,save_as)
 
 def f_print_linux_status(save_as):
