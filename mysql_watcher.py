@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # coding: utf-8
 
-# MySQL Watcher V1.1.3
+# MySQL Watcher V1.1.6
 # trouble shoot MySQL performance
 # Copyright (C) 2017-2017 Kinghow - Kinghow@hotmail.com
 # Git repository available at https://github.com/kinghows/MySQL_Watcher
@@ -315,13 +315,13 @@ def f_print_log_error(conn,perfor_or_infor,save_as):
 def f_print_caption(dbinfo,mysql_version,save_as):
     if save_as == "txt":
         print tab2 * linesize
-        print tab2, 'MySQL Watcher  V1.1.3'.center(linesize - 4), tab2
+        print tab2, 'MySQL Watcher  V1.1.6'.center(linesize - 4), tab2
         print tab2, 'Kinghow@hotmail.com'.center(linesize - 4), tab2
         print tab2, 'https://github.com/kinghows/MySQL_Watcher'.center(linesize - 4), tab2
         print tab2 * linesize
     elif save_as == "html":
         print """
-<html><head><title>MySQL Watcher V1.1.3 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
+<html><head><title>MySQL Watcher V1.1.6 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
 <style type=\"text/css\">
 body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
 pre.awr  {font:8pt Courier;color:black; background:White;}
@@ -518,7 +518,7 @@ def f_get_mysql_status(conn):
     mysqlstatus = dict(rows)
     return mysqlstatus
 
-def f_print_mysql_status(conn,interval,save_as):
+def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
     ###获取参数###################################################################
     mysqlstatus1 = f_get_mysql_status(conn)
     time.sleep(interval)
@@ -535,17 +535,17 @@ def f_print_mysql_status(conn,interval,save_as):
     Com_rollback2 = long(mysqlstatus2["Com_rollback"])
     # 从硬盘读取键的数据块的次数。如果Key_reads较大，则Key_buffer_size值可能太小。
     # 可以用Key_reads/Key_read_requests计算缓存损失率
-    Key_reads1 = long(mysqlstatus1["Key_reads"])
-    Key_reads2 = long(mysqlstatus2["Key_reads"])
+    #Key_reads1 = long(mysqlstatus1["Key_reads"])
+    #Key_reads2 = long(mysqlstatus2["Key_reads"])
     # 从缓存读键的数据块的请求数
-    Key_read_requests1 = long(mysqlstatus1["Key_read_requests"])
-    Key_read_requests2 = long(mysqlstatus2["Key_read_requests"])
+    #Key_read_requests1 = long(mysqlstatus1["Key_read_requests"])
+    #Key_read_requests2 = long(mysqlstatus2["Key_read_requests"])
     # 向硬盘写入将键的数据块的物理写操作的次数
-    Key_writes1 = long(mysqlstatus1["Key_writes"])
-    Key_writes2 = long(mysqlstatus2["Key_writes"])
+    #Key_writes1 = long(mysqlstatus1["Key_writes"])
+    #Key_writes2 = long(mysqlstatus2["Key_writes"])
     # 将键的数据块写入缓存的请求数
-    Key_write_requests1 = long(mysqlstatus1["Key_write_requests"])
-    Key_write_requests2 = long(mysqlstatus2["Key_write_requests"])
+    #Key_write_requests1 = long(mysqlstatus1["Key_write_requests"])
+    #Key_write_requests2 = long(mysqlstatus2["Key_write_requests"])
     # 不能满足InnoDB必须单页读取的缓冲池中的逻辑读数量。
     Innodb_buffer_pool_reads1 = long(mysqlstatus1["Innodb_buffer_pool_reads"])
     Innodb_buffer_pool_reads2 = long(mysqlstatus2["Innodb_buffer_pool_reads"])
@@ -553,6 +553,8 @@ def f_print_mysql_status(conn,interval,save_as):
     Innodb_buffer_pool_read_requests1 = long(mysqlstatus1["Innodb_buffer_pool_read_requests"])
     Innodb_buffer_pool_read_requests2 = long(mysqlstatus2["Innodb_buffer_pool_read_requests"])
     # 查询缓存被访问的次数
+    query = "SELECT variable_value FROM " + perfor_or_infor + ".global_variables where variable_name ='query_cache_type'"
+    query_cache_type = f_get_query_value(conn, query)
     Qcache_hits1 = long(mysqlstatus1["Qcache_hits"])
     Qcache_hits2 = long(mysqlstatus2["Qcache_hits"])
     # 加入到缓存的查询数量，缓存没有用到
@@ -590,11 +592,11 @@ def f_print_mysql_status(conn,interval,save_as):
     Com_replace1 = long(mysqlstatus1["Com_replace"])
     Com_replace2 = long(mysqlstatus2["Com_replace"])
     # 不能立即获得的表的锁的次数。如果该值较高，并且有性能问题，你应首先优化查询，然后拆分表或使用复制。
-    Table_locks_waited1 = long(mysqlstatus1["Table_locks_waited"])
-    Table_locks_waited2 = long(mysqlstatus2["Table_locks_waited"])
+    #Table_locks_waited1 = long(mysqlstatus1["Table_locks_waited"])
+    #Table_locks_waited2 = long(mysqlstatus2["Table_locks_waited"])
     # 立即获得的表的锁的次数
-    Table_locks_immediate1 = long(mysqlstatus1["Table_locks_immediate"])
-    Table_locks_immediate2 = long(mysqlstatus2["Table_locks_immediate"])
+    #Table_locks_immediate1 = long(mysqlstatus1["Table_locks_immediate"])
+    #Table_locks_immediate2 = long(mysqlstatus2["Table_locks_immediate"])
     # 服务器执行语句时自动创建的内存中的临时表的数量。如果Created_tmp_disk_tables较大，
     # 你可能要增加tmp_table_size值使临时 表基于内存而不基于硬盘
     Created_tmp_tables1 = long(mysqlstatus1["Created_tmp_tables"])
@@ -631,37 +633,37 @@ def f_print_mysql_status(conn,interval,save_as):
     Uptimes1 = str(interval) + "s"
     Uptimes2 = f_sec2dhms(Uptime2)
     # QPS = Questions / Seconds
-    QPS1 = str(round((Questions2-Questions1) * 1.0 / interval, 2))
-    QPS2 = str(round(Questions2* 1.0 / Uptime2, 2))
+    QPS1 = str(round((Questions2-Questions1) * 1.0 / interval, 2))+' ('+str(Questions2-Questions1)+'/'+str(interval)+')'
+    QPS2 = str(round(Questions2* 1.0 / Uptime2, 2))+' ('+str(Questions2)+'/'+str(Uptime2)+')'
 
-    TPS1 = str(round((Com_commit2 + Com_rollback2-Com_commit1 - Com_rollback1) * 1.0 / interval, 2))
-    TPS2 = str(round((Com_commit2 + Com_rollback2)* 1.0 / Uptime2, 2))
+    TPS1 = str(round((Com_commit2 + Com_rollback2-Com_commit1 - Com_rollback1) * 1.0 / interval, 2))+' (('+str(Com_commit2 -Com_commit1)+'+'+str(Com_rollback2- Com_rollback1)+')/'+str(interval)+')'
+    TPS2 = str(round((Com_commit2 + Com_rollback2)* 1.0 / Uptime2, 2))+' (('+str(Com_commit2)+'+'+str(Com_rollback2)+')/'+str(Uptime2)+')'
 
     Read1 = Com_select2 + Qcache_hits2-Com_select1 - Qcache_hits1
     Read2 = Com_select2 + Qcache_hits2
-    ReadS1 = str(round(Read1 * 1.0 / interval, 2))
-    ReadS2 = str(round(Read2* 1.0 / Uptime2, 2))
+    ReadS1 = str(round(Read1 * 1.0 / interval, 2))+' ('+str(Read1)+'/'+str(interval)+')'
+    ReadS2 = str(round(Read2* 1.0 / Uptime2, 2))+' ('+str(Read2)+'/'+str(Uptime2)+')'
 
     Write1 = Com_insert2 + Com_update2 + Com_delete2 + Com_replace2-Com_insert1 - Com_update1 - Com_delete1 - Com_replace1
     Write2 = Com_insert2 + Com_update2 + Com_delete2 + Com_replace2
-    WriteS1 = str(round(Write1 * 1.0 / interval, 2))
-    WriteS2 = str(round(Write2* 1.0 / Uptime2, 2))
+    WriteS1 = str(round(Write1 * 1.0 / interval, 2))+' ('+str(Write1)+'/'+str(interval)+')'
+    WriteS2 = str(round(Write2* 1.0 / Uptime2, 2))+' ('+str(Write2)+'/'+str(Uptime2)+')'
     # Read/Write Ratio
     if Write1<>0:
-        rwr1 = str(round(Read1 * 1.0 / Write1,2))
+        rwr1 = str(round(Read1 * 1.0 / Write1,2))+' ('+str(Read1)+'/'+str(Write1)+')'
     else:
         rwr1 ='0.0%'
 
     if Write2<>0:
-        rwr2 = str(round(Read2 * 1.0 / Write2,2))
+        rwr2 = str(round(Read2 * 1.0 / Write2,2))+' ('+str(Read2)+'/'+str(Write2)+')'
     else:
         rwr2 ='0.0%'
 
-    Slow_queries_per_second1 = str(round((Slow_queries2-Slow_queries1) * 1.0 / interval, 2))
-    Slow_queries_per_second2 = str(round(Slow_queries2 * 1.0 / Uptime2, 2))
+    Slow_queries_per_second1 = str(round((Slow_queries2-Slow_queries1) * 1.0 / interval, 2))+' ('+str(Slow_queries2-Slow_queries1)+'/'+str(interval)+')'
+    Slow_queries_per_second2 = str(round(Slow_queries2 * 1.0 / Uptime2, 2))+' ('+str(Slow_queries2)+'/'+str(Uptime2)+')'
     #Slow_queries / Questions
-    SQ1 = str(round(((Slow_queries2-Slow_queries1) * 1.0 / (Questions2-Questions1)) * 100, 2)) + "%"
-    SQ2 = str(round((Slow_queries2 * 1.0 / Questions2) * 100, 2)) + "%"
+    SQ1 = str(round(((Slow_queries2-Slow_queries1) * 1.0 / (Questions2-Questions1)) * 100, 2)) + "%"+' ('+str(Slow_queries2-Slow_queries1)+'/'+str(Questions2-Questions1)+')'
+    SQ2 = str(round((Slow_queries2 * 1.0 / Questions2) * 100, 2)) + "%"+' ('+str(Slow_queries2)+'/'+str(Questions2)+')'
 
     if (Connections2-Connections1) <> 0:
         Thread_cache_hits1 = str(round((1 - (Threads_created2-Threads_created1)* 1.0 / (Connections2-Connections1)) * 100, 2)) + "%"
@@ -670,14 +672,15 @@ def f_print_mysql_status(conn,interval,save_as):
     Thread_cache_hits2 = str(round((1 - Threads_created2 * 1.0 / Connections2) * 100, 2)) + "%"
 
     if (Innodb_buffer_pool_read_requests2-Innodb_buffer_pool_read_requests1) <> 0:
-        Innodb_buffer_read_hits1 = str(round((1 - (Innodb_buffer_pool_reads2-Innodb_buffer_pool_reads1) * 1.0 / (Innodb_buffer_pool_read_requests2-Innodb_buffer_pool_read_requests1)) * 100, 2)) + "%"
+        Innodb_buffer_read_hits1 = str(round((1 - (Innodb_buffer_pool_reads2-Innodb_buffer_pool_reads1) * 1.0 / (Innodb_buffer_pool_read_requests2-Innodb_buffer_pool_read_requests1)) * 100, 2)) + "%"+ "%"+' (1-'+str(Innodb_buffer_pool_reads2-Innodb_buffer_pool_reads1)+'/'+str(Innodb_buffer_pool_read_requests2-Innodb_buffer_pool_read_requests1)+')'
     else:
         Innodb_buffer_read_hits1 = '0.0%'
-    Innodb_buffer_read_hits2 = str(round((1 - Innodb_buffer_pool_reads2* 1.0 / Innodb_buffer_pool_read_requests2) * 100, 2)) + "%"
+    Innodb_buffer_read_hits2 = str(round((1 - Innodb_buffer_pool_reads2* 1.0 / Innodb_buffer_pool_read_requests2) * 100, 2)) + "%"+' (1-'+str(Innodb_buffer_pool_reads2)+'/'+str(Innodb_buffer_pool_read_requests2)+')'
 
-    Innodb_buffer_pool_utilization1 = str(round((Innodb_buffer_pool_pages_total1 - Innodb_buffer_pool_pages_free1) * 1.0 / Innodb_buffer_pool_pages_total1 * 100,2)) + "%"
-    Innodb_buffer_pool_utilization2 = str(round((Innodb_buffer_pool_pages_total2 - Innodb_buffer_pool_pages_free2) * 1.0 / Innodb_buffer_pool_pages_total2 * 100,2)) + "%"
+    Innodb_buffer_pool_utilization1 = str(round((Innodb_buffer_pool_pages_total1 - Innodb_buffer_pool_pages_free1) * 1.0 / Innodb_buffer_pool_pages_total1 * 100,2)) + "%"+' ('+str(Innodb_buffer_pool_pages_total1 - Innodb_buffer_pool_pages_free1)+'/'+str(Innodb_buffer_pool_pages_total1)+')'
+    Innodb_buffer_pool_utilization2 = str(round((Innodb_buffer_pool_pages_total2 - Innodb_buffer_pool_pages_free2) * 1.0 / Innodb_buffer_pool_pages_total2 * 100,2)) + "%"+' ('+str(Innodb_buffer_pool_pages_total2 - Innodb_buffer_pool_pages_free2)+'/'+str(Innodb_buffer_pool_pages_total2)+')'
 
+    """
     if (Key_read_requests2-Key_read_requests1) <> 0:
         Key_buffer_read_hits1 = str(round((1 - (Key_reads2-Key_reads1) * 1.0 / (Key_read_requests2-Key_read_requests1)) * 100, 2)) + "%"
     else:
@@ -695,46 +698,50 @@ def f_print_mysql_status(conn,interval,save_as):
         Key_buffer_write_hits2 = str(round((1 - Key_writes2* 1.0 / Key_write_requests2) * 100, 2)) + "%"
     else:
         Key_buffer_write_hits2 = '0.0%'
-
-    if (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1) > 0:
-        Query_cache_hits1 = str(round((((Qcache_hits2-Qcache_hits1)* 1.0 / (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1)) * 100), 2)) + "%"
+    """
+    if query_cache_type == 'ON':
+        if (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1) > 0:
+            Query_cache_hits1 = str(round((((Qcache_hits2-Qcache_hits1)* 1.0 / (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1)) * 100), 2)) + "%"
+        else:
+            Query_cache_hits1 = '0.0%'
+        if (Qcache_hits2 + Qcache_inserts2) > 0:
+            Query_cache_hits2 = str(round(((Qcache_hits2* 1.0 / (Qcache_hits2 + Qcache_inserts2)) * 100), 2)) + "%"
+        else:
+            Query_cache_hits2 = '0.0%'
     else:
-        Query_cache_hits1 = '0.0%'
-    if (Qcache_hits2 + Qcache_inserts2) > 0:
-        Query_cache_hits2 = str(round(((Qcache_hits2* 1.0 / (Qcache_hits2 + Qcache_inserts2)) * 100), 2)) + "%"
-    else:
-        Query_cache_hits2 = '0.0%'
+        Query_cache_hits1 = query_cache_type
+        Query_cache_hits2 = query_cache_type
 
     if (Select_full_join2-Select_full_join1) > 0:
-        Select_full_join_per_second1 = str(round((Select_full_join2-Select_full_join1) * 1.0 / interval, 2))
+        Select_full_join_per_second1 = str(round((Select_full_join2-Select_full_join1) * 1.0 / interval, 2))+' ('+str(Select_full_join2-Select_full_join1)+'/'+str(interval)+')'
     else:
         Select_full_join_per_second1 = '0.0%'
-    Select_full_join_per_second2 = str(round(Select_full_join2 * 1.0 / Uptime2, 2))
+    Select_full_join_per_second2 = str(round(Select_full_join2 * 1.0 / Uptime2, 2))+' ('+str(Select_full_join2)+'/'+str(Uptime2)+')'
 
     if (Com_select2-Com_select1) > 0:
-        full_select_in_all_select1 = str(round(((Select_full_join2-Select_full_join1) * 1.0 / (Com_select2-Com_select1)) * 100, 2)) + "%"
+        full_select_in_all_select1 = str(round(((Select_full_join2-Select_full_join1) * 1.0 / (Com_select2-Com_select1)) * 100, 2)) + "%"+' ('+str(Select_full_join2-Select_full_join1)+'/'+str(Com_select2-Com_select1)+')'
     else:
         full_select_in_all_select1 = '0.0%'
-    full_select_in_all_select2 = str(round((Select_full_join2 * 1.0 / Com_select2) * 100, 2)) + "%"
+    full_select_in_all_select2 = str(round((Select_full_join2 * 1.0 / Com_select2) * 100, 2)) + "%"+' ('+str(Select_full_join2)+'/'+str(Com_select2)+')'
 
     #((Handler_read_rnd_next + Handler_read_rnd) / (Handler_read_rnd_next + Handler_read_rnd + Handler_read_first + Handler_read_next + Handler_read_key + Handler_read_prev)).
-    if (Handler_read_rnd_next2 -Handler_read_rnd_next1+ Handler_read_rnd2-Handler_read_rnd1 + Handler_read_first2 -Handler_read_first1+ Handler_read_next2-Handler_read_next1 + Handler_read_key2-Handler_read_key2 + Handler_read_prev2-Handler_read_prev1) > 0:
+    if (Handler_read_rnd_next2 -Handler_read_rnd_next1+ Handler_read_rnd2-Handler_read_rnd1 + Handler_read_first2 -Handler_read_first1+ Handler_read_next2-Handler_read_next1 + Handler_read_key2-Handler_read_key1 + Handler_read_prev2-Handler_read_prev1) > 0:
         full_table_scans1=str(round((Handler_read_rnd_next2 + Handler_read_rnd2-Handler_read_rnd_next1 - Handler_read_rnd1)* 1.0 / (Handler_read_rnd_next2 -Handler_read_rnd_next1+ Handler_read_rnd2-Handler_read_rnd1 + Handler_read_first2 -Handler_read_first1+ Handler_read_next2-Handler_read_next1 + Handler_read_key2-Handler_read_key2 + Handler_read_prev2-Handler_read_prev1)* 100, 2)) + "%"
     else:
         full_table_scans1 = '0.0%'
     full_table_scans2=str(round((Handler_read_rnd_next2 + Handler_read_rnd2)* 1.0 / (Handler_read_rnd_next2 + Handler_read_rnd2 + Handler_read_first2 + Handler_read_next2 + Handler_read_key2 + Handler_read_prev2)* 100, 2)) + "%"
-
+    """
     if (Table_locks_immediate2-Table_locks_immediate1) > 0:
         lock_contention1 = str(round(((Table_locks_waited2-Table_locks_waited1) * 1.00 / (Table_locks_immediate2-Table_locks_immediate1)) * 100, 2)) + "%"
     else:
         lock_contention1 = '0.0%'
     lock_contention2 = str(round((Table_locks_waited2 * 1.00 / Table_locks_immediate2) * 100, 2)) + "%"
-
+    """
     if (Created_tmp_tables2-Created_tmp_tables1) > 0:
-        Temp_tables_to_disk1 = str(round(((Created_tmp_disk_tables2-Created_tmp_disk_tables1) * 1.0 / (Created_tmp_tables2-Created_tmp_tables1)) * 100, 2)) + "%"
+        Temp_tables_to_disk1 = str(round(((Created_tmp_disk_tables2-Created_tmp_disk_tables1) * 1.0 / (Created_tmp_tables2-Created_tmp_tables1)) * 100, 2)) + "%"+' ('+str(Created_tmp_disk_tables2-Created_tmp_disk_tables1)+'/'+str(Created_tmp_tables2-Created_tmp_tables1)+')'
     else:
         Temp_tables_to_disk1 = '0.0%'
-    Temp_tables_to_disk2 = str(round((Created_tmp_disk_tables2 * 1.0 / Created_tmp_tables2) * 100, 2)) + "%"
+    Temp_tables_to_disk2 = str(round((Created_tmp_disk_tables2 * 1.0 / Created_tmp_tables2) * 100, 2)) + "%"+' ('+str(Created_tmp_disk_tables2)+'/'+str(Created_tmp_tables2)+')'
 
     ###打印参数###################################################################
     title = "MySQL Overview"
@@ -753,13 +760,13 @@ def f_print_mysql_status(conn,interval,save_as):
           ["Thread cache hits (>90%)", Thread_cache_hits1, Thread_cache_hits2],
           ["Innodb buffer hits(96% - 99%)", Innodb_buffer_read_hits1,Innodb_buffer_read_hits2],
           ["Innodb buffer pool utilization", Innodb_buffer_pool_utilization1,Innodb_buffer_pool_utilization2],
-          ["Key buffer read hits(99.3% - 99.9%)",str(Key_buffer_read_hits1), str(Key_buffer_read_hits2)],
-          ["Key buffer write hits(99.3% - 99.9%)", str(Key_buffer_write_hits1), str(Key_buffer_write_hits2)],
+          #["Key buffer read hits(99.3% - 99.9%)",str(Key_buffer_read_hits1), str(Key_buffer_read_hits2)],
+          #["Key buffer write hits(99.3% - 99.9%)", str(Key_buffer_write_hits1), str(Key_buffer_write_hits2)],
           ["Query Cache Hits", Query_cache_hits1, Query_cache_hits2],
           ["Select full join per second", Select_full_join_per_second1, Select_full_join_per_second2],
           ["full select in all select", full_select_in_all_select1, full_select_in_all_select2],
           ["full table scans", full_table_scans1, full_table_scans2],
-          ["MyISAM Lock waiting ratio", lock_contention1, lock_contention2],
+          #["MyISAM Lock waiting ratio", lock_contention1, lock_contention2],
           ["Current open tables", str(Open_tables1), str(Open_tables2)],
           ["Accumulative open tables", str(Opened_tables1), str(Opened_tables2)],
           ["Temp tables to disk(<10%)", Temp_tables_to_disk1, Temp_tables_to_disk2]
@@ -816,7 +823,7 @@ if __name__=="__main__":
         f_print_host_memory_topN(topN,save_as)
 
     if config.get("option","mysql_overview")=='ON':
-        f_print_mysql_status(conn,interval,save_as)
+        f_print_mysql_status(conn,perfor_or_infor,interval,save_as)
 
     if config.get("option","sys_parm")=='ON':
         title = "System Parameter "
