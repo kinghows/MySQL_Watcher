@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # coding: utf-8
 
-# MySQL Watcher V1.1.6
+# MySQL Watcher V1.1.7
 # trouble shoot MySQL performance
 # Copyright (C) 2017-2017 Kinghow - Kinghow@hotmail.com
 # Git repository available at https://github.com/kinghows/MySQL_Watcher
@@ -315,13 +315,13 @@ def f_print_log_error(conn,perfor_or_infor,save_as):
 def f_print_caption(dbinfo,mysql_version,save_as):
     if save_as == "txt":
         print tab2 * linesize
-        print tab2, 'MySQL Watcher  V1.1.6'.center(linesize - 4), tab2
+        print tab2, 'MySQL Watcher  V1.1.7'.center(linesize - 4), tab2
         print tab2, 'Kinghow@hotmail.com'.center(linesize - 4), tab2
         print tab2, 'https://github.com/kinghows/MySQL_Watcher'.center(linesize - 4), tab2
         print tab2 * linesize
     elif save_as == "html":
         print """
-<html><head><title>MySQL Watcher V1.1.6 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
+<html><head><title>MySQL Watcher V1.1.7 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
 <style type=\"text/css\">
 body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
 pre.awr  {font:8pt Courier;color:black; background:White;}
@@ -802,10 +802,10 @@ if __name__=="__main__":
     mysql_version = f_get_query_value(conn, query)
     f_print_caption(dbinfo,mysql_version,save_as)
 
-    if "5.7" in mysql_version:
-        perfor_or_infor = "performance_schema"
-    else:
+    if "5.6" in mysql_version:
         perfor_or_infor = "information_schema"
+    else:
+        perfor_or_infor = "performance_schema"
         
     sys_schema_exist = f_is_sys_schema_exist(conn)
 
@@ -861,7 +861,7 @@ if __name__=="__main__":
         style = {1: 'HOSTS,l', 2: 'USER,l', 3: 'db,l', 4: 'command,l', 5: 'COUNT(*),r', 6: 'SUM(TIME),r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get ( "option", "avg_query_time" ) == 'ON' and ("5.7" in mysql_version):
+    if config.get ( "option", "avg_query_time" ) == 'ON' and not ("5.6" in mysql_version):
         title = "Avg Query Time"
         query = """SELECT schema_name,SUM(count_star) COUNT, ROUND((SUM(sum_timer_wait)/SUM(count_star))/1000000) avg_microsec
                    FROM performance_schema.events_statements_summary_by_digest
@@ -1037,12 +1037,19 @@ if __name__=="__main__":
         #host 监听连接过的主机 statements 当前主机执行的语句总数 statement_latency 语句等待时间（延迟时间） statement_avg_latency 执行语句平均延迟时间 table_scans 表扫描次数
         #file_ios io时间总数 file_io_latency 文件io延迟 current_connections 当前连接数 total_connections 总链接数 unique_users 该主机的唯一用户数 current_memory 当前账户分配的内存
         #total_memory_allocated 该主机分配的内存总数
-        query = """SELECT host,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
+        if "5.6" in mysql_version:
+            query = """SELECT host,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
+                        total_connections,unique_users
+                        FROM sys.host_summary"""
+            style = {1: 'host,l', 2: 'statements,r', 3: 'st_ltc,r', 4: 'st_avg_ltc,r', 5: 'table_scan,r', 6: 'file_ios,r',
+                     7: 'f_io_ltc,r', 8: 'cur_conns,r', 9: 'total_conn,r', 10: 'unq_users,r'}
+        else:
+            query = """SELECT host,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
                     total_connections,unique_users,current_memory,total_memory_allocated
                     FROM sys.host_summary"""
-        style = {1: 'host,l', 2: 'statements,r', 3: 'st_ltc,r', 4: 'st_avg_ltc,r', 5: 'table_scan,r',
-                 6: 'file_ios,r', 7: 'f_io_ltc,r', 8: 'cur_conns,r', 9: 'total_conn,r',
-                 10: 'unq_users,r', 11: 'cur_mem,r', 12: 'tal_mem_alc,r'}
+            style = {1: 'host,l', 2: 'statements,r', 3: 'st_ltc,r', 4: 'st_avg_ltc,r', 5: 'table_scan,r', 6: 'file_ios,r',
+                     7: 'f_io_ltc,r', 8: 'cur_conns,r', 9: 'total_conn,r', 10: 'unq_users,r', 11: 'cur_mem,r',
+                     12: 'tal_mem_alc,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
     if config.get("option", "host_summary_by_file_io_type") == 'ON' and sys_schema_exist:
@@ -1094,12 +1101,19 @@ if __name__=="__main__":
         # statements 当前用户执行的语句总数 statement_latency 语句等待时间（延迟时间） statement_avg_latency 执行语句平均延迟时间 table_scans 表扫描次数
         #file_ios io时间总数 file_io_latency 文件io延迟 current_connections 当前连接数 total_connections 总链接数 unique_users 该用户的唯一主机数 current_memory 当前账户分配的内存
         #total_memory_allocated 该主机分配的内存总数
-        query = """SELECT user,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
-                    total_connections,unique_hosts,current_memory,total_memory_allocated
+        if "5.6" in mysql_version:
+
+            query = """SELECT user,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
+                    total_connections,unique_hosts
                     FROM sys.user_summary"""
-        style = {1: 'user,l', 2: 'statements,r', 3: 'st_ltc,r', 4: 'st_avg_ltc,r', 5: 'table_scan,r',
-                 6: 'file_ios,r', 7: 'f_io_ltc,r', 8: 'cur_conns,r', 9: 'total_conn,r',
-                 10: 'unq_hosts,r', 11: 'cur_mem,r', 12: 'tal_mem_alc,r'}
+            style = {1: 'user,l', 2: 'statements,r', 3: 'st_ltc,r', 4: 'st_avg_ltc,r', 5: 'table_scan,r', 6: 'file_ios,r',
+                     7: 'f_io_ltc,r', 8: 'cur_conns,r', 9: 'total_conn,r', 10: 'unq_hosts,r'}
+        else:
+            query = """SELECT user,statements,statement_latency,statement_avg_latency,table_scans,file_ios,file_io_latency,current_connections,
+                        total_connections,unique_hosts,current_memory,total_memory_allocated
+                        FROM sys.user_summary"""
+            style = {1: 'user,l', 2: 'statements,r', 3: 'st_ltc,r', 4: 'st_avg_ltc,r', 5: 'table_scan,r', 6: 'file_ios,r',
+                     7: 'f_io_ltc,r', 8: 'cur_conns,r', 9: 'total_conn,r', 10: 'unq_hosts,r', 11: 'cur_mem,r', 12: 'tal_mem_alc,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
     if config.get("option", "user_summary_by_file_io_type") == 'ON' and sys_schema_exist:
@@ -1252,7 +1266,7 @@ if __name__=="__main__":
         style = {1: 'event,l', 2: 'total,r', 3: 'total_latency,r',4: 'avg_latency,r', 5: 'max_latency,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "schema_table_lock_waits") == 'ON' and sys_schema_exist:
+    if config.get("option", "schema_table_lock_waits") == 'ON' and sys_schema_exist and not "5.6" in mysql_version:
         title = "schema_table_lock_waits"
         query = """SELECT object_schema,object_name,waiting_account,waiting_lock_type,
                     waiting_lock_duration,waiting_query,waiting_query_secs,waiting_query_rows_affected,waiting_query_rows_examined,
@@ -1279,35 +1293,35 @@ if __name__=="__main__":
                  6: 'waiting_query,l', 7: 'wt_lk_md,l', 8: 'blocking_query,l',9: 'bk_lk_md,l'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "memory_by_host_by_current_bytes") == 'ON' and sys_schema_exist:
+    if config.get("option", "memory_by_host_by_current_bytes") == 'ON' and sys_schema_exist and not "5.6" in mysql_version:
         title = "memory_by_host_by_current_bytes"
         query = """SELECT HOST,current_count_used,current_allocated,current_avg_alloc,current_max_alloc,total_allocated
                     FROM sys.memory_by_host_by_current_bytes"""
         style = {1: 'HOST,l', 2: 'crt_count_used,r', 3: 'crt_allocatedc,r',4: 'crt_avg_alloc,r', 5: 'crt_max_alloc,r',6: 'tal_alloc,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "memory_by_thread_by_current_bytes") == 'ON' and sys_schema_exist:
+    if config.get("option", "memory_by_thread_by_current_bytes") == 'ON' and sys_schema_exist and not "5.6" in mysql_version:
         title = "memory_by_thread_by_current_bytes"
         query = """SELECT thread_id,USER,current_count_used,current_allocated,current_avg_alloc,current_max_alloc,total_allocated
                     FROM sys.memory_by_thread_by_current_bytes ORDER BY thread_id"""
         style = {1: 'thread_id,r', 2: 'USER,l', 3: 'crt_count_used,r', 4: 'crt_allocatedc,r',5: 'crt_avg_alloc,r', 6: 'crt_max_alloc,r',7: 'tal_alloc,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "memory_by_user_by_current_bytes") == 'ON' and sys_schema_exist:
+    if config.get("option", "memory_by_user_by_current_bytes") == 'ON' and sys_schema_exist  and not "5.6" in mysql_version:
         title = "memory_by_user_by_current_bytes"
         query = """SELECT USER,current_count_used,current_allocated,current_avg_alloc,current_max_alloc,total_allocated
                     FROM sys.memory_by_user_by_current_bytes"""
         style = {1: 'USER,l', 2: 'crt_count_used,r', 3: 'crt_alloc,r',4: 'crt_avg_alloc,r', 5: 'crt_max_alloc,r',6: 'tal_alloc,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "memory_global_by_current_bytes") == 'ON' and sys_schema_exist:
+    if config.get("option", "memory_global_by_current_bytes") == 'ON' and sys_schema_exist  and not "5.6" in mysql_version:
         title = "memory_global_by_current_bytes"
         query = """SELECT event_name,current_count,current_alloc,current_avg_alloc,high_count,high_alloc,high_avg_alloc
                     FROM sys.memory_global_by_current_bytes ORDER BY current_alloc DESC"""
         style = {1: 'event_name,l', 2: 'crt_count,r', 3: 'crt_alloc,r',4: 'crt_avg_alloc,r', 5: 'high_count,r',6: 'high_alloc,r',7: 'high_avg_alloc,r'}
         f_print_query_table(conn, title, query, style,save_as)
 
-    if config.get("option", "memory_global_total") == 'ON' and sys_schema_exist:
+    if config.get("option", "memory_global_total") == 'ON' and sys_schema_exist  and not "5.6" in mysql_version:
         title = "memory_global_total"
         query = """SELECT total_allocated FROM sys.memory_global_total"""
         style = {1: 'total_allocated,r'}
