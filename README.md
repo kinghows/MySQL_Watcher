@@ -37,6 +37,10 @@ python mysql_watcher.py -p dbset.ini -s txt >mysql_watcher.txt
 
 python mysql_watcher.py -p dbset.ini -s html >mysql_watcher.html
 
-use crontab regularly perform mysql_watcher.sh
+send email:
+
+python SendEmail.py -p emailset.ini -f my_report.html
+
+use crontab regularly perform sql_report.sh,auto generate  report,and send email.
 
 Enjoy it! 
