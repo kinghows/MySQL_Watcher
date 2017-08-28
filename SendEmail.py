@@ -33,7 +33,6 @@ Email_to_list=[]
 for Email_to in to_list.split(','):
     Email_to_list.append(Email_to)
 
-print Email_to_list
 msg = MIMEMultipart()
 msg['Subject'] =  Email_subject
 msg.attach(MIMEText(Email_text, 'plain', 'gbk')) #utf-8
