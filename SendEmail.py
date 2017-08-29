@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 
-import datetime
 import getopt
 import sys
 import ConfigParser
@@ -8,15 +7,15 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-today = datetime.datetime.now()
 config_file = "emailset.ini"
+attfiles =""
 
 opts, args = getopt.getopt(sys.argv[1:], "p:f:")
 for o, v in opts:
     if o == "-p":
         config_file = v
     elif o == "-f":
-        attfile = v
+        attfiles = v
 
 config = ConfigParser.ConfigParser()
 config.readfp(open(config_file, "rb"))
@@ -37,7 +36,7 @@ msg = MIMEMultipart()
 msg['Subject'] =  Email_subject
 msg.attach(MIMEText(Email_text, 'plain', 'gbk')) #utf-8
 
-for fs in attfile.split(','):
+for fs in attfiles.split(','):
     att = MIMEText(open(r'%s' % fs, 'rb').read(), 'base64', 'utf-8')  # 添加附件
     att["Content-Type"] = 'application/octet-stream'
     att["Content-Disposition"] = 'attachment; filename="%s"' % fs
