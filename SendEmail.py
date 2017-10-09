@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import datetime
 import getopt
 import sys
 import ConfigParser
@@ -7,15 +8,15 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+today = datetime.datetime.now()
 config_file = "emailset.ini"
-attfiles =""
 
 opts, args = getopt.getopt(sys.argv[1:], "p:f:")
 for o, v in opts:
     if o == "-p":
         config_file = v
     elif o == "-f":
-        attfiles = v
+        attfile = v
 
 config = ConfigParser.ConfigParser()
 config.readfp(open(config_file, "rb"))
@@ -36,15 +37,16 @@ msg = MIMEMultipart()
 msg['Subject'] =  Email_subject
 msg.attach(MIMEText(Email_text, 'plain', 'gbk')) #utf-8
 
-for fs in attfiles.split(','):
+for fs in attfile.split(','):
     att = MIMEText(open(r'%s' % fs, 'rb').read(), 'base64', 'utf-8')  # 添加附件
     att["Content-Type"] = 'application/octet-stream'
     att["Content-Disposition"] = 'attachment; filename="%s"' % fs
     msg.attach(att)
 
 try:
-    s = smtplib.SMTP_SSL()  # smtplib.SMTP() 如果是使用SSL端口:SMTP_SSL
+    s = smtplib.SMTP()  # smtplib.SMTP() 如果是使用SSL端口:SMTP_SSL
     s.connect(Email_host,Email_port)
+    s.starttls()
     s.login(Email_user,Email_pass)
     s.sendmail(Email_from,Email_to_list, msg.as_string())
 except Exception, e:
