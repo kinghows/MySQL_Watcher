@@ -10,7 +10,7 @@ pip install psutil
 pip install prettytable
 
 
-Test in Python-2.7+MySQL5.6&5.7.
+Test in Python-2.7+MySQL5.6&5.7&8.0.
 
 Some options must be executed on the host,not remote.
 

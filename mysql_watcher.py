@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # coding: utf-8
 
-# MySQL Watcher V1.1.7
+# MySQL Watcher V1.2.0
 # trouble shoot MySQL performance
 # Copyright (C) 2017-2017 Kinghow - Kinghow@hotmail.com
 # Git repository available at https://github.com/kinghows/MySQL_Watcher
@@ -315,13 +315,13 @@ def f_print_log_error(conn,perfor_or_infor,save_as):
 def f_print_caption(dbinfo,mysql_version,save_as):
     if save_as == "txt":
         print tab2 * linesize
-        print tab2, 'MySQL Watcher  V1.1.7'.center(linesize - 4), tab2
+        print tab2, 'MySQL Watcher  V1.2.0'.center(linesize - 4), tab2
         print tab2, 'Kinghow@hotmail.com'.center(linesize - 4), tab2
         print tab2, 'https://github.com/kinghows/MySQL_Watcher'.center(linesize - 4), tab2
         print tab2 * linesize
     elif save_as == "html":
         print """
-<html><head><title>MySQL Watcher V1.1.7 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
+<html><head><title>MySQL Watcher V1.2.0 Kinghow@hotmail.com https://github.com/kinghows/MySQL_Watcher </title>
 <style type=\"text/css\">
 body.awr {font:bold 10pt Arial,Helvetica,Geneva,sans-serif;color:black; background:White;}
 pre.awr  {font:8pt Courier;color:black; background:White;}
@@ -553,13 +553,21 @@ def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
     Innodb_buffer_pool_read_requests1 = long(mysqlstatus1["Innodb_buffer_pool_read_requests"])
     Innodb_buffer_pool_read_requests2 = long(mysqlstatus2["Innodb_buffer_pool_read_requests"])
     # 查询缓存被访问的次数
-    query = "SELECT variable_value FROM " + perfor_or_infor + ".global_variables where variable_name ='query_cache_type'"
-    query_cache_type = f_get_query_value(conn, query)
-    Qcache_hits1 = long(mysqlstatus1["Qcache_hits"])
-    Qcache_hits2 = long(mysqlstatus2["Qcache_hits"])
+    query ="select @@version"
+    mysql_version = f_get_query_value(conn, query)
+    if mysql_version[0:1] <='5' :
+        query = "SELECT variable_value FROM " + perfor_or_infor + ".global_variables where variable_name ='query_cache_type'"
+        query_cache_type = f_get_query_value(conn, query)
+        Qcache_hits1 = long(mysqlstatus1["Qcache_hits"])
+        Qcache_hits2 = long(mysqlstatus2["Qcache_hits"])
+    else:
+        Qcache_hits1 = 0
+        Qcache_hits2 = 0
+
     # 加入到缓存的查询数量，缓存没有用到
-    Qcache_inserts1 = long(mysqlstatus1["Qcache_inserts"])
-    Qcache_inserts2 = long(mysqlstatus2["Qcache_inserts"])
+    if mysql_version[0:1] <>'8' :
+        Qcache_inserts1 = long(mysqlstatus1["Qcache_inserts"])
+        Qcache_inserts2 = long(mysqlstatus2["Qcache_inserts"])
     # 当前打开的表的数量
     Open_tables1 = long(mysqlstatus2["Open_tables"])-long(mysqlstatus1["Open_tables"])
     Open_tables2 = long(mysqlstatus2["Open_tables"])
@@ -699,18 +707,22 @@ def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
     else:
         Key_buffer_write_hits2 = '0.0%'
     """
-    if query_cache_type == 'ON':
-        if (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1) > 0:
-            Query_cache_hits1 = str(round((((Qcache_hits2-Qcache_hits1)* 1.0 / (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1)) * 100), 2)) + "%"
+    if mysql_version[0:1] <='5'  :
+        if query_cache_type == 'ON' :
+            if (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1) > 0:
+                Query_cache_hits1 = str(round((((Qcache_hits2-Qcache_hits1)* 1.0 / (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1)) * 100), 2)) + "%"
+            else:
+                Query_cache_hits1 = '0.0%'
+            if (Qcache_hits2 + Qcache_inserts2) > 0:
+                Query_cache_hits2 = str(round(((Qcache_hits2* 1.0 / (Qcache_hits2 + Qcache_inserts2)) * 100), 2)) + "%"
+            else:
+                Query_cache_hits2 = '0.0%'
         else:
-            Query_cache_hits1 = '0.0%'
-        if (Qcache_hits2 + Qcache_inserts2) > 0:
-            Query_cache_hits2 = str(round(((Qcache_hits2* 1.0 / (Qcache_hits2 + Qcache_inserts2)) * 100), 2)) + "%"
-        else:
-            Query_cache_hits2 = '0.0%'
+            Query_cache_hits1 = query_cache_type
+            Query_cache_hits2 = query_cache_type
     else:
-        Query_cache_hits1 = query_cache_type
-        Query_cache_hits2 = query_cache_type
+        Query_cache_hits1 = 'null'
+        Query_cache_hits2 = 'null'
 
     if (Select_full_join2-Select_full_join1) > 0:
         Select_full_join_per_second1 = str(round((Select_full_join2-Select_full_join1) * 1.0 / interval, 2))+' ('+str(Select_full_join2-Select_full_join1)+'/'+str(interval)+')'
