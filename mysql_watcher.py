@@ -552,22 +552,7 @@ def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
     # InnoDB已经完成的逻辑读请求数
     Innodb_buffer_pool_read_requests1 = long(mysqlstatus1["Innodb_buffer_pool_read_requests"])
     Innodb_buffer_pool_read_requests2 = long(mysqlstatus2["Innodb_buffer_pool_read_requests"])
-    # 查询缓存被访问的次数
-    query ="select @@version"
-    mysql_version = f_get_query_value(conn, query)
-    if mysql_version[0:1] <='5' :
-        query = "SELECT variable_value FROM " + perfor_or_infor + ".global_variables where variable_name ='query_cache_type'"
-        query_cache_type = f_get_query_value(conn, query)
-        Qcache_hits1 = long(mysqlstatus1["Qcache_hits"])
-        Qcache_hits2 = long(mysqlstatus2["Qcache_hits"])
-    else:
-        Qcache_hits1 = 0
-        Qcache_hits2 = 0
 
-    # 加入到缓存的查询数量，缓存没有用到
-    if mysql_version[0:1] <>'8' :
-        Qcache_inserts1 = long(mysqlstatus1["Qcache_inserts"])
-        Qcache_inserts2 = long(mysqlstatus2["Qcache_inserts"])
     # 当前打开的表的数量
     Open_tables1 = long(mysqlstatus2["Open_tables"])-long(mysqlstatus1["Open_tables"])
     Open_tables2 = long(mysqlstatus2["Open_tables"])
@@ -647,8 +632,8 @@ def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
     TPS1 = str(round((Com_commit2 + Com_rollback2-Com_commit1 - Com_rollback1) * 1.0 / interval, 2))+' (('+str(Com_commit2 -Com_commit1)+'+'+str(Com_rollback2- Com_rollback1)+')/'+str(interval)+')'
     TPS2 = str(round((Com_commit2 + Com_rollback2)* 1.0 / Uptime2, 2))+' (('+str(Com_commit2)+'+'+str(Com_rollback2)+')/'+str(Uptime2)+')'
 
-    Read1 = Com_select2 + Qcache_hits2-Com_select1 - Qcache_hits1
-    Read2 = Com_select2 + Qcache_hits2
+    Read1 = Com_select2 -Com_select1
+    Read2 = Com_select2 
     ReadS1 = str(round(Read1 * 1.0 / interval, 2))+' ('+str(Read1)+'/'+str(interval)+')'
     ReadS2 = str(round(Read2* 1.0 / Uptime2, 2))+' ('+str(Read2)+'/'+str(Uptime2)+')'
 
@@ -707,23 +692,6 @@ def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
     else:
         Key_buffer_write_hits2 = '0.0%'
     """
-    if mysql_version[0:1] <='5'  :
-        if query_cache_type == 'ON' :
-            if (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1) > 0:
-                Query_cache_hits1 = str(round((((Qcache_hits2-Qcache_hits1)* 1.0 / (Qcache_hits2 + Qcache_inserts2-Qcache_hits1 - Qcache_inserts1)) * 100), 2)) + "%"
-            else:
-                Query_cache_hits1 = '0.0%'
-            if (Qcache_hits2 + Qcache_inserts2) > 0:
-                Query_cache_hits2 = str(round(((Qcache_hits2* 1.0 / (Qcache_hits2 + Qcache_inserts2)) * 100), 2)) + "%"
-            else:
-                Query_cache_hits2 = '0.0%'
-        else:
-            Query_cache_hits1 = query_cache_type
-            Query_cache_hits2 = query_cache_type
-    else:
-        Query_cache_hits1 = 'null'
-        Query_cache_hits2 = 'null'
-
     if (Select_full_join2-Select_full_join1) > 0:
         Select_full_join_per_second1 = str(round((Select_full_join2-Select_full_join1) * 1.0 / interval, 2))+' ('+str(Select_full_join2-Select_full_join1)+'/'+str(interval)+')'
     else:
@@ -774,7 +742,6 @@ def f_print_mysql_status(conn,perfor_or_infor,interval,save_as):
           ["Innodb buffer pool utilization", Innodb_buffer_pool_utilization1,Innodb_buffer_pool_utilization2],
           #["Key buffer read hits(99.3% - 99.9%)",str(Key_buffer_read_hits1), str(Key_buffer_read_hits2)],
           #["Key buffer write hits(99.3% - 99.9%)", str(Key_buffer_write_hits1), str(Key_buffer_write_hits2)],
-          ["Query Cache Hits", Query_cache_hits1, Query_cache_hits2],
           ["Select full join per second", Select_full_join_per_second1, Select_full_join_per_second2],
           ["full select in all select", full_select_in_all_select1, full_select_in_all_select2],
           ["full table scans", full_table_scans1, full_table_scans2],
