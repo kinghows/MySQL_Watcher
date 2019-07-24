@@ -36,6 +36,7 @@ for Email_to in to_list.split(','):
 msg = MIMEMultipart()
 msg['Subject'] =  Email_subject
 msg.attach(MIMEText(Email_text, 'plain', 'gbk')) #utf-8
+msg["From"]=Email_from
 
 for fs in attfile.split(','):
     att = MIMEText(open(r'%s' % fs, 'rb').read(), 'base64', 'utf-8')  # 添加附件
@@ -44,9 +45,8 @@ for fs in attfile.split(','):
     msg.attach(att)
 
 try:
-    s = smtplib.SMTP()  # smtplib.SMTP() 如果是使用SSL端口:SMTP_SSL
+    s = smtplib.SMTP_SSL()  # smtplib.SMTP() 如果是使用SSL端口:SMTP_SSL
     s.connect(Email_host,Email_port)
-    s.starttls()
     s.login(Email_user,Email_pass)
     s.sendmail(Email_from,Email_to_list, msg.as_string())
 except Exception, e:
