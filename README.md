@@ -1,16 +1,17 @@
 # MySQL_Watcher
 MySQL Watcher is a tool to help DBA's to trouble shoot MySQL performance.
 
-need install mysql-python,psutil,prettytable:
-
-pip install mysql-python
-
 pip install psutil
 
 pip install prettytable
 
+2.7：
 
-Test in Python-2.7+MySQL5.6&5.7&8.0.
+pip install mysql-python
+
+3.x:
+
+pip install mysqlclient
 
 Some options must be executed on the host,not remote.
 
@@ -29,6 +30,8 @@ Edit MySQL connect info in dbset.ini.
 
 execute:
 
+2.7:
+
 python mysql_watcher.py
 
 python mysql_watcher.py -p dbset.ini
@@ -40,6 +43,20 @@ python mysql_watcher.py -p dbset.ini -s html >mysql_watcher.html
 send email:
 
 python SendEmail.py -p emailset.ini -f my_report1.html,my_report2.html
+
+3.x:
+
+python3 mysql_watcher3.py
+
+python3 mysql_watcher3.py -p dbset.ini
+
+python3 mysql_watcher3.py -p dbset.ini -s txt >mysql_watcher.txt
+
+python3 mysql_watcher3.py -p dbset.ini -s html >mysql_watcher.html
+
+send email:
+
+python3 SendEmail3.py -p emailset.ini -f my_report1.html,my_report2.html
 
 use crontab regularly perform sql_report.sh,auto generate  report,and send email.
 
