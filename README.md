@@ -9,7 +9,7 @@ pip install prettytable
 
 pip install mysql-python
 
-3.x:
+3.8:
 
 pip install mysqlclient
 
@@ -44,7 +44,7 @@ send email:
 
 python SendEmail.py -p emailset.ini -f my_report1.html,my_report2.html
 
-3.x:
+3.8:
 
 python3 mysql_watcher3.py
 
