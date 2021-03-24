@@ -69,3 +69,5 @@ Enjoy it!
 - [SQL_Report：自定义SQL生成HTML报告](https://github.com/kinghows/SQL_Report)
 
 - [SQL_Chart：自定义SQL生成HTML图表](https://github.com/kinghows/SQL_Chart)
+
+- [Logthin：日志精简工具](https://github.com/kinghows/Logthin)
