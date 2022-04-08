@@ -72,4 +72,6 @@ Enjoy it!
 
 - [Logthin：日志精简工具](https://github.com/kinghows/Logthin)
 
+- [Logchart：日志图形化工具](https://github.com/kinghows/Logchart)
+
 - [Linux_Report：自定义Linux 命令生成HTML报告](https://github.com/kinghows/Linux_Report)
